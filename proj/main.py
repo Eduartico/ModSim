@@ -2,6 +2,8 @@ from mesa import Agent, Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
+from mesa.visualization.modules import CanvasGrid, ChartModule
+from mesa.visualization.ModularVisualization import ModularServer
 
 
 # Define the car agent
@@ -55,6 +57,32 @@ class ParkingLotModel(Model):
     def count_parked_cars(self):
         return sum([1 for a in self.schedule.agents if isinstance(a, CarAgent) and a.parked])
 
+# Visualization helper function
+def agent_portrayal(agent):
+    portrayal = {"Shape": "circle", "r": 0.8, "Filled": "true"}
+    if agent.parked:
+        portrayal["Color"] = "blue"
+        portrayal["Layer"] = 1
+    else:
+        portrayal["Color"] = "red"
+        portrayal["Layer"] = 0
+    return portrayal
+
+# Setting up CanvasGrid and ChartModule for visualization
+grid = CanvasGrid(agent_portrayal, 10, 10, 500, 500)
+chart = ChartModule([{"Label": "Parked Cars", "Color": "Black"}])
+
+# Launch the simulation in a browser window
+server = ModularServer(
+    ParkingLotModel,
+    [grid, chart],
+    "Parking Lot Model",
+    {"width": 10, "height": 10, "N": 20}
+)
+
+if __name__ == "__main__":
+    server.port = 8521
+    server.launch()
 
 # Run the simulation
 if __name__ == "__main__":
