@@ -59,7 +59,7 @@ class ParkingLotModel(Model):
 
 # Visualization helper function
 def agent_portrayal(agent):
-    portrayal = {"Shape": "circle", "r": 0.8, "Filled": "true"}
+    portrayal = {"Shape": "rect", "h": 0.8, "w": 0.4 , "Filled": "true"}
     if agent.parked:
         portrayal["Color"] = "blue"
         portrayal["Layer"] = 1
