@@ -1,10 +1,10 @@
-# FUNÇÕES RELACIONADAS AOS CARROS, CLASSE CARRO ?
 from mesa import Agent
 
 # Define the car agent
-class CarAgent(Agent):
-    def __init__(self, unique_id, model):
+class Car(Agent):
+    def __init__(self, unique_id, model, car_type):
         super().__init__(unique_id, model)
+        self.car_type = car_type
         self.parked = False
 
     def step(self):

@@ -1,21 +1,13 @@
 from mesa.visualization.modules import CanvasGrid, ChartModule
 from mesa.visualization.ModularVisualization import ModularServer
 
-from parking import ParkingLotModel
 
-# Visualization helper function
-def agent_portrayal(agent):
-    portrayal = {"Shape": "rect", "h": 0.8, "w": 0.4 , "Filled": "true"}
-    if agent.parked:
-        portrayal["Color"] = "blue"
-        portrayal["Layer"] = 1
-    else:
-        portrayal["Color"] = "red"
-        portrayal["Layer"] = 0
-    return portrayal
+from model import ParkingLotModel
+from portrayal import car_portrayal
+
 
 # Setting up CanvasGrid and ChartModule for visualization
-grid = CanvasGrid(agent_portrayal, 20, 10, 500, 500)
+grid = CanvasGrid(car_portrayal, 20, 10, 500, 500)
 chart = ChartModule([{"Label": "Parked Cars", "Color": "Black"}])
 
 # Launch the simulation in a browser window
