@@ -6,6 +6,30 @@ class Car(Agent):
         super().__init__(unique_id, model)
         self.car_type = car_type
         self.parked = False
+        
+        
+    def park_car(self):
+        self.parked = True
+        
+    def unpark_car(self):
+        self.parked = False
+        self.model.grid.remove_agent(self)
+        self.model.schedule.remove(self)
+        
+    def set_type(self, car_type):
+        self.car_type = car_type
+        
+    def try_leave(self):
+        if self.random() < 0.1:
+            self.unpark_car()
+    
+    def get_type(self):
+        return self.car_type
+    
+    def get_state(self):
+        return self.parked
+    
+    
 
     def step(self):
         if not self.parked:
