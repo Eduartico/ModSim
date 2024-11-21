@@ -1,13 +1,17 @@
 from mesa.visualization.modules import CanvasGrid, ChartModule
 from mesa.visualization.ModularVisualization import ModularServer
-
+import math
 
 from model import ParkingLotModel
 from portrayal import car_portrayal
+from aux import calculate_dimensions
 
-
+common_spots = 20
+electric_spots = 0
+premium_spots = 0
+width, height = calculate_dimensions(common_spots, electric_spots, premium_spots)
 # Setting up CanvasGrid and ChartModule for visualization
-grid = CanvasGrid(car_portrayal, 20, 10, 500, 500)
+grid = CanvasGrid(car_portrayal, width, height, 500, 500)
 chart = ChartModule([{"Label": "Parked Cars", "Color": "Black"}])
 
 # Launch the simulation in a browser window
@@ -15,7 +19,9 @@ server = ModularServer(
     ParkingLotModel,
     [grid, chart],
     "Parking Lot Model",
-    {"width": 20, "height": 10, "N": 20}
+    {"height": height, "width": width,
+     "common_spots": common_spots, "electric_spots": electric_spots, "premium_spots": premium_spots,
+     "electric_chance": 0.4, "premium_chance": 0.1, "starting_cars": 30}
 )
 
 if __name__ == "__main__":
