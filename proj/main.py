@@ -4,7 +4,7 @@ import math
 
 from model import ParkingLotModel
 from portrayal import car_portrayal
-from aux import calculate_dimensions
+from auxiliar import calculate_dimensions
 
 common_spots = 20
 electric_spots = 0
