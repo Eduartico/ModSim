@@ -14,7 +14,7 @@ class ParkingLotModel(Model):
         super().__init__()  # Explicitly initialize the base Model class
         self.datacollector = None
         self.num_agents = starting_cars
-        self.grid = MultiGrid(width, height + 1, torus=False)
+        self.grid = MultiGrid(width, height+1, torus=False)
         self.schedule = RandomActivation(self)
 
         self.common_spots = common_spots
@@ -23,23 +23,18 @@ class ParkingLotModel(Model):
 
         self.number_electric = electric_chance
         self.number_premium = premium_chance
-        if starting_cars != 0:
-            self.create_normal_cars()
-            if electric_chance != 0:
-                self.create_electric_cars()
-
-            if premium_chance != 0:
-                self.create_premium_cars()
                 
         self.queue = []
         self.car_id = 0
         self.num_spots = 0
+        self.aux = 3
             
 
-    def place_car_random_empty_spot(self, car):
-        x = self.random.randrange(self.grid.width)
-        y = self.random.randrange(self.grid.height)
-        self.grid.place_agent(car, (x, y))
+    def place_car_empty_spot(self, car, empty_spots):
+        spot = empty_spots[0]
+        self.grid.place_agent(car, spot)
+        self.queue.pop(0)  # Remover o carro da fila
+        car.parked = True
 
     def create_normal_cars(self):
         for i in range(int(self.num_agents * (1 - self.number_electric - self.number_premium))):
@@ -64,10 +59,18 @@ class ParkingLotModel(Model):
 
     def step(self):
         self.add_car_to_queue()
+        self.aux -= 1
         
         # Place cars in queue grid
         for x, car in enumerate(self.queue[:self.grid.width]):
             self.grid.place_agent(car, (x, self.grid.height - 1))  # Place car in queue grid cell
+            
+        empty_spots = self.check_empty_spots()
+        
+        if self.aux < 0 :
+            if len(empty_spots) != 0:
+                self.place_car_empty_spot(self.queue[0], empty_spots)
+        
         self.schedule.step()
         
     def add_car_to_queue(self):
@@ -75,6 +78,12 @@ class ParkingLotModel(Model):
         car = Car(self.car_id, self, car_type)
         self.queue.append(car)
         self.car_id += 1
+        
+    def check_empty_spots(self):
+        empty_spots = [(x, y) for x in range(self.grid.width) for y in range(self.grid.height - 1)
+                           if self.grid.is_cell_empty((x, y))]
+        
+        return empty_spots
         
     def find_spot(self):
         return

@@ -10,7 +10,7 @@ electric_spots = 0
 premium_spots = 0
 width, height = calculate_dimensions(common_spots, electric_spots, premium_spots)
 # Setting up CanvasGrid and ChartModule for visualization
-grid = CanvasGrid(car_portrayal, 20, 11, 500, 550)  # 20x11 (10 para estacionamento + 1 para fila)
+grid = CanvasGrid(car_portrayal, 5, 5, 500, 550)  # 20x11 (10 para estacionamento + 1 para fila)
 
 # Launch the simulation in a browser window
 server = ModularServer(
