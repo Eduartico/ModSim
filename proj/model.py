@@ -72,9 +72,16 @@ class ParkingLotModel(Model):
         self.unique_id += 1
 
     def update_grid(self):
-        # Place cars in queue grid
+        # Clean queue representation
+        for cell in range(self.grid.width):
+            for agent in self.grid.get_cell_list_contents((cell, 0)):
+                if agent in self.queue:
+                    self.grid.remove_agent(agent)
+
+        # Insert cars on queue representation
         for x, car in enumerate(self.queue[:self.grid.width]):
-            self.grid.place_agent(car, (x, 0))  # Place car in queue grid cell
+            if self.grid.is_cell_empty((x, 0)):  # Verificar se a célula está vazia
+                self.grid.place_agent(car, (x, 0))
 
     def check_empty_spots(self):
         empty_spots = [(x, y) for x in range(self.grid.width) for y in range(2, self.grid.height)
