@@ -78,8 +78,12 @@ class ParkingLotModel(Model):
 
     def check_empty_spots(self):
         empty_spots = [(x, y) for x in range(self.grid.width) for y in range(2, self.grid.height)
-                       if self.grid.is_cell_empty((x, y))]
+                       if self.is_cell_empty(x, y)]
         return empty_spots
+
+    def is_cell_empty(self, x, y) -> bool:
+        """Returns a bool of the contents of a cell."""
+        return len(self.grid[x][y]) == 1
 
     def place_car_empty_spot(self, car, empty_spots):
         spot = empty_spots[0]
