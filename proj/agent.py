@@ -45,3 +45,26 @@ class Car(Agent):
             if self.random.random() < 0.1:
                 self.model.grid.remove_agent(self)
                 self.model.schedule.remove(self)
+
+
+# Define the spot agent
+class Spot(Agent):
+    def __init__(self, unique_id, model, spot_type="Normal"):
+        super().__init__(unique_id, model)
+        self.spot_type = spot_type
+        self.available = True
+
+    def park_car(self):
+        self.available = False
+
+    def unpark_car(self):
+        self.available = True
+
+    def set_type(self, spot_type):
+        self.spot_type = spot_type
+
+    def get_type(self):
+        return self.spot_type
+
+    def is_available(self):
+        return self.available

@@ -6,11 +6,11 @@ from portrayal import car_portrayal
 from auxiliar import calculate_dimensions
 
 common_spots = 40
-electric_spots = 0
-premium_spots = 0
+electric_spots = 15
+premium_spots = 10
 width, height = calculate_dimensions(common_spots, electric_spots, premium_spots)
 # Setting up CanvasGrid and ChartModule for visualization
-grid = CanvasGrid(car_portrayal, width, height + 2, 500, 550)  # 20x11 (10 para estacionamento + 1 para fila)
+grid = CanvasGrid(car_portrayal, width, height + 2, 500, 550)  # (height + 2 para fila)
 
 # Launch the simulation in a browser window
 server = ModularServer(
@@ -19,7 +19,7 @@ server = ModularServer(
     "Parking Lot Model",
     {"height": height + 2, "width": width,
      "common_spots": common_spots, "electric_spots": electric_spots, "premium_spots": premium_spots,
-     "electric_chance": 0.4, "premium_chance": 0.1, "starting_cars": 30}
+     "electric_chance": 0.2, "premium_chance": 0.05, "starting_cars": 30}
 )
 
 if __name__ == "__main__":
