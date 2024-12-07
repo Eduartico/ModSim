@@ -29,8 +29,6 @@ class Car(Agent):
     def get_state(self):
         return self.parked
     
-    
-
     def step(self):
         if not self.parked:
             # Find an empty spot

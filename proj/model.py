@@ -6,7 +6,6 @@ import random
 
 from agent import Car, Spot
 
-
 # Define the parking model
 class ParkingLotModel(Model):
     def __init__(self, height, width, common_spots, electric_spots=0, premium_spots=0,
