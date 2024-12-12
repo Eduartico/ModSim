@@ -63,29 +63,29 @@ class Simulation:
             print("Wrong mode selected.")
 
         self.model = model.ParkingLotModel(self.height, self.width, self.common_spots, self.electric_spots,
-                                           self.premium_spots, self.electric_chance, self.premium_chance, 0)
+                                           self.premium_spots, self.electric_chance, self.premium_chance, 0, mode)
 
     def run_simulation(self):
+
         while self.current_minutes < self.day_length:
-            self.current_minutes += 1
+            self.current_minutes += 1 # avaliar se é necessário ter estes minutos
+            self.model.current_minutes += 1
             current_hour = (self.current_minutes // 60) % 24
             print(f"Time: {self.current_minutes} minutes")
 
             if self.current_minutes % 5 == 0 and current_hour <= 21: # working hours
-                self.spawn_car() #chamar
+                self.model.add_car_to_queue(model)
 
-            for car in self.model.cars:
-                if not car.parked:
-                    self.park_car(car)
-                elif car.parked and self.current_minutes % 10 == 0:
-                    self.remove_car(car)
+            if (mode on demand and demand > demandmax):
+                self.model.update_parking_spots(self.model)
+                self.model.on_demand_step(self.model)
 
-            self.model.step()
             print(f"Parked cars: {self.model.count_parked_cars()}")
             time.sleep(0.1)
 
         print("Simulation day complete.")
+        #TODO: IR BUSCAR O GRAVEYARD, CRIAR PANDAS DF RELEVANTE
+        #return simulation_df
 
-        #get time
 
 

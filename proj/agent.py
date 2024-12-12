@@ -2,10 +2,12 @@ from mesa import Agent
 
 # Define the car agent
 class Car(Agent):
-    def __init__(self, unique_id, model, car_type):
+    def __init__(self, unique_id, model, car_type, created_minute):
         super().__init__(unique_id, model)
         self.car_type = car_type
         self.parked = False
+        self.created_minute = created_minute
+        self.parked_minute = 0 #TODO
         
         
     def park_car(self):
@@ -40,6 +42,8 @@ class Car(Agent):
                 self.parked = True
         else:
             # Decide to leave after a certain time
+            # TODO: FAZER ISTO FUNCIONAR, AO INVES DE SE DELETAREM, VAO PARA O MODEL.GRAVEYARD
+            # TODO: NAO SER RANDOM, FAZER ALGO QUE A CHANCE AUMENTA CONFORME MODEL.CURRENT_MINUTES - CAR.PARKED_MINUTES AUMENTA
             if self.random.random() < 0.1:
                 self.model.grid.remove_agent(self)
                 self.model.schedule.remove(self)

@@ -28,6 +28,10 @@ class ParkingLotModel(Model):
         self.num_spots = 0
         self.aux = 3
 
+        self.current_minutes = 0
+
+        self.graveyard = [] # CEMITERIOS DE CARROS QUE SAIRAM
+
         self.create_spots()
 
     def create_spots(self):
@@ -48,13 +52,29 @@ class ParkingLotModel(Model):
                     x = 0
                     y += 1
 
+    def update_parking_spots(self):
+        return
+        #TODO: FUNCAO A SER CHAMA PELA SIMULACAO QUE ALTERA O NUMERO DE TIPOS DE VAGAS
+        #TODO: NÃO ESQUECER DE FAZER ALGO COMO O UPDATE GRID NO ADD CAR TO QUEUE
+        #TODO: CHAMAR/MUDAR CENAS NO AGENT DE SPOT
     def count_parked_cars(self):
-        return sum([1 for a in self.schedule.agents if isinstance(a, Car) and a.parked])
+        return #um([1 for a in self.schedule.agents if isinstance(a, Car) and a.parked])
 
+    def priority_step(self):
+        #TODO: STEPS DO MODO PRIORIDADE
+        return
+
+    def on_demand_step(self):
+        #TODO: STEPS DO MODO ON-DEMAND
+        return
+    def time_based_step(self):
+        #TODO: STEPS DO MODO TIME BASED
+        return
+    def membership_step(self):
+        #TODO: STEPS DO MODO MEMBERSHIP
+        return
     def step(self):
-        self.add_car_to_queue()
-        self.update_grid()
-
+        #STEP GERAL DEIXA DE EXISTIR
         empty_spots = self.check_empty_spots()
 
         if self.aux < 0:
@@ -62,13 +82,24 @@ class ParkingLotModel(Model):
                 self.place_car_empty_spot(self.queue[0], empty_spots)
 
         self.aux -= 1
-        self.schedule.step()
+        #self.schedule.step() o step nao chama o proximo step
 
     def add_car_to_queue(self):
+        #TODO: trocar este random para usar as chances que estao no model
         car_type = random.choice(["Normal", "Electric", "Premium"])
         car = Car(self.unique_id, self, car_type)
         self.queue.append(car)
         self.unique_id += 1
+        self.update_grid()
+
+    def check_remove_car(self):
+        #TODO: função que percorre
+        for cell in range(self.grid.width):
+            for agent in self.grid.get_cell_list_contents((cell, 0)):
+                if agent in self.queue:
+                    self.queue.remove(agent)
+                    self.grid.remove_agent(agent)
+                    break
 
     def update_grid(self):
         # Clean queue representation
@@ -99,6 +130,7 @@ class ParkingLotModel(Model):
 
     def find_spot(self):
         return
+
 
     """
     def create_normal_cars(self):
