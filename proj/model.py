@@ -87,7 +87,7 @@ class ParkingLotModel(Model):
     def add_car_to_queue(self):
         #TODO: trocar este random para usar as chances que estao no model
         car_type = random.choice(["Normal", "Electric", "Premium"])
-        car = Car(self.unique_id, self, car_type)
+        car = Car(self.unique_id, self, car_type, self.current_minutes)
         self.queue.append(car)
         self.unique_id += 1
         self.update_grid()
@@ -127,6 +127,7 @@ class ParkingLotModel(Model):
         self.grid.place_agent(car, spot)
         self.queue.pop(0)  # Remover o carro da fila
         car.parked = True
+        car.parked_minute = self.current_minutes
 
     def find_spot(self):
         return

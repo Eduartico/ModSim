@@ -8,6 +8,7 @@ class Car(Agent):
         self.parked = False
         self.created_minute = created_minute
         self.parked_minute = 0 #TODO
+        self.leaved_minute = 0 #TODO
         
         
     def park_car(self):
@@ -16,8 +17,9 @@ class Car(Agent):
     def unpark_car(self):
         self.parked = False
         self.model.grid.remove_agent(self)
-        self.model.schedule.remove(self)
-        
+        self.leaved_minute = self.model.current_minutes
+        #TODO POPULAR CAR.LEAVED_MINUTES
+
     def set_type(self, car_type):
         self.car_type = car_type
         

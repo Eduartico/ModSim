@@ -9,17 +9,18 @@ class Modes(Enum):
     MEMBERSHIP = "Membership"
 
 class Simulation:
-    def __init__(self, width, height, num_agents, mode=Modes.PRIORITY):
+    def __init__(self, width, height, total_spots, electric_percentage=0.1, premium_percentage=0.1, electric_chance=0.1, premium_chance=0.1, mode=Modes.PRIORITY):
         self.electric_spots = None
         self.common_spots = None
+        self.premium_spots = 0
+        self.total_spots = total_spots
+        self.electric_percentage = electric_percentage
+        self.premium_percentage = premium_percentage
         self.model = None
         self.width = width
         self.height = height
-        self.total_spots = 60
-        self.premium_spots = 0
-        self.electric_chance = 0.1
-        self.premium_chance = 0.1
-        self.num_agents = num_agents
+        self.electric_chance = electric_chance
+        self.premium_chance = premium_chance
         self.mode = mode
         self.current_minutes = 0
         self.day_length = 1440 # 24 hours
@@ -28,16 +29,15 @@ class Simulation:
         self.mode = mode
         print(f"Setting mode to {self.mode.value}")
         if self.mode == Modes.PRIORITY:
-            self.common_spots = self.total_spots * (1 - 0.1)
-            self.electric_spots = self.total_spots * 0.1
+            self.common_spots = self.total_spots * (1 - self.electric_percentage)
+            self.electric_spots = self.total_spots * self.electric_percentage
+            self.premium_chance = 0
 
         elif self.mode == Modes.ON_DEMAND:
             def adjust_ev_spaces_based_on_demand():
-                # COMO DEFINIR SPOTS ON DEMAND NO MODEL?
-                demand = self.model.calculate_ev_demand()
-                ev_percentage = 0.15 if demand > 0.5 else 0.05
-                self.model.set_ev_spaces(int(total_spaces * ev_percentage))
-                print(f"On-Demand Mode: Adjusted EV spaces to {int(self.total_spaces * ev_percentage)} based on demand.")
+                demand = self.model.calculate_ev_demand() #TODO
+                self.electric_percentage = 0.15 if demand > 0.5 else 0.05 #NAO SEREM VALORES HARD CODED, FAZER ALGO COMO O DEVIO GERADO PELA FUNÇÃO DA DEMANDA
+                self.model.update_parking_spots(self.model) # TODO ATUALIZAR PARAMETROS QUANDO HUGO FIZER ISTO
 
             adjust_ev_spaces_based_on_demand()
 
@@ -45,35 +45,38 @@ class Simulation:
             def set_time_based_parking():
                 current_hour = (self.current_minutes // 60) % 24
                 if 8 <= current_hour < 18: # rush hour
-                    self.common_spots = self.total_spots * (1 - 0.05)
-                    self.electric_spots = self.total_spots * 0.05
+                    self.common_spots = self.total_spots * (1 - (self.electric_percentage * 0.5)) # diminuir as vagas eletricas pela metade
+                    self.electric_spots = self.total_spots * (self.electric_percentage * 0.5)
                 else:
-                    self.common_spots = self.total_spots * (1 - 0.15)
-                    self.electric_spots = self.total_spots * 0.15
+                    self.common_spots = self.total_spots * (1 - (self.electric_percentage * 1.5)) # aumentar as vagas eletricas pela metade
+                    self.electric_spots = self.total_spots * (self.electric_percentage * 1.5)
+
+                self.model.update_parking_spots(self.model)  # TODO ATUALIZAR PARAMETROS QUANDO HUGO FIZER ISTO
 
             set_time_based_parking()
 
         elif self.mode == Modes.MEMBERSHIP:
-            self.common_spots = self.total_spots * (1 - 0.2)
-            self.electric_spots = self.total_spots * 0.1
-            self.premium_spots = self.total_spots * 0.1
+            self.common_spots = self.total_spots * (1 - (self.electric_percentage + self.premium_percentage))
+            self.electric_spots = self.total_spots * self.electric_percentage
+            self.premium_spots = self.total_spots * self.premium_percentage
 
 
         else:
             print("Wrong mode selected.")
 
         self.model = model.ParkingLotModel(self.height, self.width, self.common_spots, self.electric_spots,
-                                           self.premium_spots, self.electric_chance, self.premium_chance, 0, mode)
+                                           self.premium_spots, self.electric_chance, self.premium_chance, 0)
 
     def run_simulation(self):
 
         while self.current_minutes < self.day_length:
-            self.current_minutes += 1 # avaliar se é necessário ter estes minutos
+            self.current_minutes += 1
             self.model.current_minutes += 1
             current_hour = (self.current_minutes // 60) % 24
-            print(f"Time: {self.current_minutes} minutes")
+            if self.current_minutes % 15 == 0:
+                print(f"Current time: {current_hour}:{self.current_minutes}")
 
-            if self.current_minutes % 5 == 0 and current_hour <= 21: # working hours
+            if self.current_minutes % 2 == 0 and current_hour <= 21:
                 self.model.add_car_to_queue(model)
 
             if (mode on demand and demand > demandmax):
