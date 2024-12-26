@@ -16,7 +16,7 @@ class ParkingLotModel(Model):
         self.queue = deque(maxlen=max_queue_size)
         self.schedule = RandomActivation(self)
         self.current_minutes = 0
-        #self.graveyard = [] # graveyard para carros que saem do parque
+        self.graveyard = []
         
         # Number of spots
         self.common_spots = common_spots
@@ -89,7 +89,7 @@ class ParkingLotModel(Model):
             if isinstance(agent, Spot) and agent.current_car == car:
                 agent.unpark_car()  # Free the spot
                 break 
-        
+        self.graveyard.append(car)
         self.schedule.remove(car)
 
     def step(self):
@@ -128,3 +128,17 @@ class OnDemandModel(ParkingLotModel):
         # Handle queue and parking logic for OnDemand
         print("Approach 2: OnDemand logic here.")
         self.schedule.step()
+        
+        
+class TimeBasedModel(ParkingLotModel):
+    def manage_parking(self, empty_spots):
+        # Handle queue and parking logic for TimeBased
+        print("Approach 3: TimeBased logic here.")
+        self.schedule.step()
+        
+class MembershipModel(ParkingLotModel):
+    def manage_parking(self, empty_spots):
+        # Handle queue and parking logic for Membership
+        print("Approach 4: Membership logic here.")
+        self.schedule.step()
+        

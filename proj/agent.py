@@ -19,15 +19,13 @@ class Car(Agent):
     def park_car(self, parked_minute):
         self.parked = True
         self.parked_minute = parked_minute
-        
-    def unpark_car(self):
-        self.parked = False
-        self.leaved_minute = self.model.current_minutes
             
     def step(self):
         # try to leave the park
         if self.parked:
             if self.model.current_minutes - self.parked_minute >= self.random.randint(30, 40):
+                self.parked = False
+                self.leaved_minute = self.model.current_minutes
                 self.model.leave_park(self)
        
     def get_type(self):
