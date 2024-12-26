@@ -1,4 +1,10 @@
 from mesa import Agent
+from enum import Enum
+
+class Type(Enum):
+    NORMAL = "Normal"
+    ELECTRIC = "Electric"
+    PREMIUM = "Premium"
 
 # Define the car agent
 class Car(Agent):
@@ -7,62 +13,45 @@ class Car(Agent):
         self.car_type = car_type
         self.parked = False
         self.created_minute = created_minute
-        self.parked_minute = 0 #TODO
-        self.leaved_minute = 0 #TODO
+        self.parked_minute = 0
+        self.leaved_minute = 0
         
-        
-    def park_car(self):
+    def park_car(self, parked_minute):
         self.parked = True
+        self.parked_minute = parked_minute
         
     def unpark_car(self):
         self.parked = False
-        self.model.grid.remove_agent(self)
         self.leaved_minute = self.model.current_minutes
-        #TODO POPULAR CAR.LEAVED_MINUTES
-
-    def set_type(self, car_type):
-        self.car_type = car_type
-        
-    def try_leave(self):
-        if self.random() < 0.1:
-            self.unpark_car()
-    
+            
+    def step(self):
+        # try to leave the park
+        if self.parked:
+            if self.model.current_minutes - self.parked_minute >= self.random.randint(30, 40):
+                self.model.leave_park(self)
+       
     def get_type(self):
         return self.car_type
     
     def get_state(self):
         return self.parked
     
-    def step(self):
-        if not self.parked:
-            # Find an empty spot
-            empty_parking_spots = [(x, y) for x in range(self.model.grid.width) for y in range(self.model.grid.height)
-                                   if self.model.grid.is_cell_empty((x, y))]
-            if empty_parking_spots:
-                new_position = self.random.choice(empty_parking_spots)
-                self.model.grid.move_agent(self, new_position)
-                self.parked = True
-        else:
-            # Decide to leave after a certain time
-            # TODO: FAZER ISTO FUNCIONAR, AO INVES DE SE DELETAREM, VAO PARA O MODEL.GRAVEYARD
-            # TODO: NAO SER RANDOM, FAZER ALGO QUE A CHANCE AUMENTA CONFORME MODEL.CURRENT_MINUTES - CAR.PARKED_MINUTES AUMENTA
-            if self.random.random() < 0.1:
-                self.model.grid.remove_agent(self)
-                self.model.schedule.remove(self)
-
 
 # Define the spot agent
 class Spot(Agent):
-    def __init__(self, unique_id, model, spot_type="Normal"):
+    def __init__(self, unique_id, model, spot_type = Type.NORMAL):
         super().__init__(unique_id, model)
         self.spot_type = spot_type
         self.available = True
+        self.current_car = None
 
-    def park_car(self):
+    def park_car(self, car):
         self.available = False
+        self.current_car = car
 
     def unpark_car(self):
         self.available = True
+        self.current_car = None
 
     def set_type(self, spot_type):
         self.spot_type = spot_type
