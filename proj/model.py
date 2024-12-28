@@ -127,8 +127,52 @@ class PriorityModel(ParkingLotModel):
         self.schedule.step()
         
 class OnDemandModel(ParkingLotModel):
+    
+    def update_parking_spots(self, ev_spaces):
+        # Update the number of parking spots based on demand
+        aux = 0
+        for agent in self.schedule.agents:
+            if isinstance(agent, Spot) and agent.available and agent.spot_type == Type.NORMAL:
+                agent.spot_type = Type.ELECTRIC
+                aux += 1
+                if aux == ev_spaces:
+                    break
+        
+        print("Updating parking spots based on demand.")
+    
+    
+    def check_demand(self):
+        # Check if the demand is greater than the threshold
+        electric_available = False
+        for agent in self.schedule.agents:
+            if isinstance(agent, Spot) and agent.available:
+                if agent.spot_type == Type.ELECTRIC:
+                    electric_available = True
+                    break
+        print("Checking demand.")
+        return electric_available
+    
     def manage_parking(self, empty_spots):
         # Handle queue and parking logic for OnDemand
+        
+        first_car = self.queue[0]
+        
+        for spot in empty_spots:
+            if first_car.get_type() == Type.NORMAL:
+                if spot.spot_type == Type.NORMAL:
+                    self.park_car(first_car, spot)
+                    self.queue.popleft()    
+                    break     
+            elif first_car.get_type() == Type.ELECTRIC:
+                if spot.spot_type == Type.ELECTRIC:
+                    self.park_car(first_car, spot)
+                    self.queue.popleft()
+                    break
+        
+        self.check_demand()
+        spots_to_add = 2
+        if not self.check_demand():
+            self.update_parking_spots(spots_to_add)
         print("Approach 2: OnDemand logic here.")
         self.schedule.step()
         

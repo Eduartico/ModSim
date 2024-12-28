@@ -1,11 +1,11 @@
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
-from model import ParkingLotModel, PriorityModel
+from model import ParkingLotModel, PriorityModel, OnDemandModel
 from portrayal import parking_lot_portrayal
 from auxiliar import calculate_dimensions
 
 common_spots = 40
-electric_spots = 15
+electric_spots = 5
 premium_spots = 0
 width, height = calculate_dimensions(common_spots, electric_spots, premium_spots)
 # Setting up CanvasGrid for visualization
@@ -15,7 +15,7 @@ grid.local_dir = "static"
 
 # Launch the simulation in a browser window
 server = ModularServer(
-    PriorityModel,
+    OnDemandModel,
     [grid],
     "Parking Lot Model",
     {"height": height + 2, "width": width,
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 # Run the simulation
 if __name__ == "__main__":
     #parking_lot = ParkingLotModel(width, height + 2, common_spots)
-    priority_model = PriorityModel(width, height + 2, common_spots, electric_spots, premium_spots, 0.2, 0, 30)
+    priority_model = OnDemandModel(width, height + 2, common_spots, electric_spots, premium_spots, 0.2, 0, 30)
 
     for i in range(10):  # Run for 10 steps
         print(f"Step {i}")
