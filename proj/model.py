@@ -45,6 +45,7 @@ class ParkingLotModel(Model):
             for _ in range(count):
                 spot = Spot(self.spot_id, self, spot_type) if spot_type else Spot(self.spot_id, self)
                 self.grid.place_agent(spot, (x, y))
+                spot.set_position(x, y)
                 self.schedule.add(spot)
                 x += 1
                 self.spot_id += 1
@@ -80,6 +81,7 @@ class ParkingLotModel(Model):
                 self.grid.place_agent(car, (x, 0))
                 
     def park_car(self, car, spot):
+        self.grid.place_agent(car, (spot.x, spot.y))
         spot.park_car(car)
         car.park_car(self.current_minutes)
         self.schedule.add(car)
@@ -89,6 +91,7 @@ class ParkingLotModel(Model):
             if isinstance(agent, Spot) and agent.current_car == car:
                 agent.unpark_car()  # Free the spot
                 break 
+        self.grid.remove_agent(car)
         self.graveyard.append(car)
         self.schedule.remove(car)
 

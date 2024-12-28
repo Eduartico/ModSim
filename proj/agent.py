@@ -40,6 +40,8 @@ class Spot(Agent):
     def __init__(self, unique_id, model, spot_type = Type.NORMAL):
         super().__init__(unique_id, model)
         self.spot_type = spot_type
+        self.x = 0
+        self.y = 0
         self.available = True
         self.current_car = None
 
@@ -53,9 +55,16 @@ class Spot(Agent):
 
     def set_type(self, spot_type):
         self.spot_type = spot_type
+        
+    def set_position(self, x, y):
+        self.x = x
+        self.y = y
 
     def get_type(self):
         return self.spot_type
+
+    def get_position(self):
+        return self.x, self.y
 
     def is_available(self):
         return self.available
