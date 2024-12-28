@@ -15,10 +15,14 @@ class Car(Agent):
         self.created_minute = created_minute
         self.parked_minute = 0
         self.leaved_minute = 0
+        self.waiting_time = 0  
         
     def park_car(self, parked_minute):
         self.parked = True
         self.parked_minute = parked_minute
+        
+    def increment_waiting_time(self):
+        self.waiting_time += 1
             
     def step(self):
         # try to leave the park
