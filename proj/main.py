@@ -20,7 +20,7 @@ server = ModularServer(
     "Parking Lot Model",
     {"height": height + 2, "width": width,
      "common_spots": common_spots, "electric_spots": electric_spots, "premium_spots": premium_spots,
-     "electric_chance": 0.2, "premium_chance": 0, "starting_cars": 30, "max_queue_size": 10}
+     "electric_chance": 0.2, "premium_chance": 0, "max_queue_size": 10}
 )
 
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 # Run the simulation
 if __name__ == "__main__":
     #parking_lot = ParkingLotModel(width, height + 2, common_spots)
-    priority_model = OnDemandModel(width, height + 2, common_spots, electric_spots, premium_spots, 0.2, 0, 30)
+    priority_model = OnDemandModel(width, height + 2, common_spots, electric_spots, premium_spots, 0.2, 0)
 
     for i in range(10):  # Run for 10 steps
         print(f"Step {i}")

@@ -8,10 +8,9 @@ from agent import Car, Spot, Type
 
 class ParkingLotModel(Model):
     def __init__(self, height, width, common_spots, electric_spots=0, premium_spots=0,
-                 electric_chance=0, premium_chance=0, starting_cars=0, max_queue_size=10):
+                 electric_chance=0, premium_chance=0, max_queue_size=10):
         super().__init__()  # Explicitly initialize the base Model class
         
-        self.num_agents = starting_cars
         self.grid = MultiGrid(width, height, torus=False)
         self.queue = deque(maxlen=max_queue_size)
         self.schedule = RandomActivation(self)
@@ -110,72 +109,55 @@ class ParkingLotModel(Model):
 class PriorityModel(ParkingLotModel):
     def manage_parking(self, empty_spots):
         # Handle queue and parking logic for Priority
-        first_car = self.queue[0]
-        
-        for spot in empty_spots:
-            if first_car.get_type() == Type.NORMAL:
-                if spot.spot_type == Type.NORMAL:
-                    self.park_car(first_car, spot)
-                    self.queue.popleft()    
-                    break     
-            elif first_car.get_type() == Type.ELECTRIC:
-                if spot.spot_type == Type.ELECTRIC:
-                    self.park_car(first_car, spot)
-                    self.queue.popleft()
-                    break
-        
+        if len(self.queue) > 0:
+            first_car = self.queue[0]
+            for spot in empty_spots:
+                if first_car.get_type() == Type.NORMAL:
+                    if spot.spot_type == Type.NORMAL:
+                        self.park_car(first_car, spot)
+                        self.queue.popleft()    
+                        break     
+                elif first_car.get_type() == Type.ELECTRIC:
+                    if spot.spot_type == Type.ELECTRIC:
+                        self.park_car(first_car, spot)
+                        self.queue.popleft()
+                        break
         self.schedule.step()
         
 class OnDemandModel(ParkingLotModel):
-    
-    def update_parking_spots(self, ev_spaces):
+    def update_parking_spots(self):
         # Update the number of parking spots based on demand
-        aux = 0
         for agent in self.schedule.agents:
             if isinstance(agent, Spot) and agent.available and agent.spot_type == Type.NORMAL:
                 agent.spot_type = Type.ELECTRIC
-                aux += 1
-                if aux == ev_spaces:
-                    break
-        
-        print("Updating parking spots based on demand.")
+                self.electric_spots += 1
+                self.common_spots -= 1
+                break
+        print("Updating parking spots.")
     
-    
-    def check_demand(self):
-        # Check if the demand is greater than the threshold
-        electric_available = False
-        for agent in self.schedule.agents:
-            if isinstance(agent, Spot) and agent.available:
-                if agent.spot_type == Type.ELECTRIC:
-                    electric_available = True
-                    break
-        print("Checking demand.")
-        return electric_available
+    def calculate_ev_demand(self, empty_spots):
+        if not any(spot.spot_type == Type.ELECTRIC and spot.available for spot in empty_spots):
+            return True
+        return False
     
     def manage_parking(self, empty_spots):
         # Handle queue and parking logic for OnDemand
-        
-        first_car = self.queue[0]
-        
-        for spot in empty_spots:
-            if first_car.get_type() == Type.NORMAL:
-                if spot.spot_type == Type.NORMAL:
-                    self.park_car(first_car, spot)
-                    self.queue.popleft()    
-                    break     
-            elif first_car.get_type() == Type.ELECTRIC:
-                if spot.spot_type == Type.ELECTRIC:
-                    self.park_car(first_car, spot)
-                    self.queue.popleft()
-                    break
-        
-        self.check_demand()
-        spots_to_add = 2
-        if not self.check_demand():
-            self.update_parking_spots(spots_to_add)
-        print("Approach 2: OnDemand logic here.")
+        if len(self.queue) > 0:
+            first_car = self.queue[0]
+            for spot in empty_spots:
+                if first_car.get_type() == Type.NORMAL:
+                    if spot.spot_type == Type.NORMAL:
+                        self.park_car(first_car, spot)
+                        self.queue.popleft()    
+                        break     
+                elif first_car.get_type() == Type.ELECTRIC:
+                    if spot.spot_type == Type.ELECTRIC:
+                        self.park_car(first_car, spot)
+                        self.queue.popleft()
+                        break
+        if self.calculate_ev_demand(empty_spots):
+            self.update_parking_spots()
         self.schedule.step()
-        
         
 class TimeBasedModel(ParkingLotModel):
     def manage_parking(self, empty_spots):

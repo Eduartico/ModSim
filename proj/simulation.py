@@ -65,7 +65,7 @@ class Simulation:
             print("Wrong mode selected.")
 
         self.model = model.ParkingLotModel(self.height, self.width, self.common_spots, self.electric_spots,
-                                           self.premium_spots, self.electric_chance, self.premium_chance, 0)
+                                           self.premium_spots, self.electric_chance, self.premium_chance, 10)
 
     def run_simulation(self):
 
