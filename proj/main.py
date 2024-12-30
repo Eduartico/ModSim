@@ -3,36 +3,69 @@ from mesa.visualization.ModularVisualization import ModularServer
 from model import ParkingLotModel, PriorityModel, OnDemandModel
 from portrayal import parking_lot_portrayal
 from auxiliar import calculate_dimensions
+from pipeline import collect_data, analyze_data, visualize_data
 
+# Parameters
 common_spots = 40
 electric_spots = 5
 premium_spots = 0
+displayGUI = False
+model_to_run = "ParkingLotModel"
+steps = 100
+max_queue_size = 10
+premium_chance = 0
+electric_chance = 0.2
 width, height = calculate_dimensions(common_spots, electric_spots, premium_spots)
-# Setting up CanvasGrid for visualization
-grid = CanvasGrid(parking_lot_portrayal, width, height + 1, 1000, 550)  # (height + 2 para fila)
-grid.local_includes = ["custom.css"]
-grid.local_dir = "static"
 
-# Launch the simulation in a browser window
-server = ModularServer(
-    OnDemandModel,
-    [grid],
-    "Parking Lot Model",
-    {"height": height + 1, "width": width,
-     "common_spots": common_spots, "electric_spots": electric_spots, "premium_spots": premium_spots,
-     "electric_chance": 0.2, "premium_chance": 0, "max_queue_size": 10}
-)
+# Map model names to classes
+model_mapping = {
+    "ParkingLotModel": ParkingLotModel,
+    "PriorityModel": PriorityModel,
+    "OnDemandModel": OnDemandModel,
+}
 
+def run_analysis(model_class):
+    simulation_model = model_class(
+        height=height + 1,
+        width=width,
+        common_spots=common_spots,
+        electric_spots=electric_spots,
+        premium_spots=premium_spots,
+        electric_chance=electric_chance,
+        premium_chance=premium_chance,
+        max_queue_size=max_queue_size,
+    )
+    df = collect_data(simulation_model, steps=steps)
+    summary = analyze_data(df)
+    print("Simulation Summary:")
+    for key, value in summary.items():
+        print(f"{key}: {value}")
+    visualize_data(df, electric_chance, premium_chance)
 
 if __name__ == "__main__":
-    server.port = 8521
-    server.launch()
+    model_class = model_mapping.get(model_to_run)
+    if not model_class:
+        raise ValueError(
+            f"Invalid model_to_run value: '{model_to_run}'. Must be one of {list(model_mapping.keys())}.")
 
-# Run the simulation
-if __name__ == "__main__":
-    #parking_lot = ParkingLotModel(width, height + 2, common_spots)
-    priority_model = OnDemandModel(width, height + 1, common_spots, electric_spots, premium_spots, 0.2, 0)
-
-    for i in range(10):  # Run for 10 steps
-        print(f"Step {i}")
-        priority_model.step()
+    if displayGUI:
+        grid = CanvasGrid(parking_lot_portrayal, width, height + 1, 1000, 550)
+        server = ModularServer(
+            model_class,
+            [grid],
+            f"{model_class.__name__} Simulation",
+            {
+                "height": height + 1,
+                "width": width,
+                "common_spots": common_spots,
+                "electric_spots": electric_spots,
+                "premium_spots": premium_spots,
+                "electric_chance": electric_chance,
+                "premium_chance": premium_chance,
+                "max_queue_size": max_queue_size,
+            },
+        )
+        server.port = 8521
+        server.launch()
+    else:
+        run_analysis(model_class)
