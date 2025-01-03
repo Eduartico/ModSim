@@ -10,7 +10,7 @@ class Modes(Enum):
     MEMBERSHIP = "Membership"
 
 class Simulation:
-    def __init__(self, width, height, total_spots, electric_percentage=0.1, premium_percentage=0.1, electric_chance=0.1, premium_chance=0.1, mode=Modes.PRIORITY, gui=False):
+    def __init__(self, width, height, total_spots, electric_percentage=0.1, premium_percentage=0.1, electric_chance=0.1, premium_chance=0.1, mode=Modes.ON_DEMAND, gui=False):
         self.electric_spots = None
         self.common_spots = None
         self.premium_spots = 0
@@ -84,6 +84,12 @@ class Simulation:
             "parked_cars": [],
             "waiting_cars": [],
             "total_cars_parked": [],
+            "available_electric_spots": [],
+            "available_premium_spots": [],
+            "available_common_spots": [],
+            "total_electric_spots": [],
+            "total_premium_spots": [],
+            "total_common_spots": [],
         }
 
         while self.current_minutes < self.day_length:
@@ -93,14 +99,26 @@ class Simulation:
             if self.gui:
                 time.sleep(0.1)
 
-            if self.current_minutes % 15 == 0:
-                current_hour = (self.current_minutes // 60) % 24
-                print(f"Current time: {current_hour}:{self.current_minutes % 60}")
+            spots = [agent for agent in self.model.schedule.agents if isinstance(agent, model.Spot)]
+            parked_cars = sum(agent.parked for agent in self.model.schedule.agents if isinstance(agent, model.Car))
 
             simulation_data["time"].append(self.current_minutes)
-            simulation_data["parked_cars"].append(sum(isinstance(agent, model.Car) and agent.parked for agent in self.model.schedule.agents))
+            simulation_data["parked_cars"].append(parked_cars)
             simulation_data["waiting_cars"].append(len(self.model.queue))
-            simulation_data["total_cars_parked"].append(len(self.model.graveyard))
+            simulation_data["total_cars_parked"].append(parked_cars + len(self.model.graveyard))
+            simulation_data["available_electric_spots"].append(
+                sum(spot.available and spot.spot_type == model.Type.ELECTRIC for spot in spots))
+            simulation_data["available_premium_spots"].append(
+                sum(spot.available and spot.spot_type == model.Type.PREMIUM for spot in spots))
+            simulation_data["available_common_spots"].append(
+                sum(spot.available and spot.spot_type == model.Type.NORMAL for spot in spots))
+            simulation_data["total_electric_spots"].append(self.electric_spots)
+            simulation_data["total_premium_spots"].append(self.premium_spots)
+            simulation_data["total_common_spots"].append(self.common_spots)
 
-        print("Simulation day complete.")
+            if self.current_minutes % 15 == 0:
+                print(f"Current time: {(self.current_minutes // 60) % 24}:{self.current_minutes % 60}")
+
+        print("Simulation complete.")
         return pd.DataFrame(simulation_data)
+
