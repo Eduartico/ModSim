@@ -111,20 +111,30 @@ class PriorityModel(ParkingLotModel):
     def manage_parking(self, empty_spots):
         for car in self.queue:
             car.increment_waiting_time()
-        
+
         # Handle queue and parking logic for Priority
         if len(self.queue) > 0:
             first_car = self.queue[0]
-            if first_car.waiting_time > 2:  # Ensure the car has waited at least two step
+            if first_car.waiting_time > 2:  # Ensure the car has waited at least two steps
+                electric_spot_found = False
                 for spot in empty_spots:
                     if first_car.get_type() == Type.NORMAL and spot.get_type() == Type.NORMAL:
                         self.park_car(first_car, spot)
-                        self.queue.popleft()    
-                        break     
+                        self.queue.popleft()
+                        break
                     elif first_car.get_type() == Type.ELECTRIC and spot.get_type() == Type.ELECTRIC:
                         self.park_car(first_car, spot)
                         self.queue.popleft()
+                        electric_spot_found = True
                         break
+
+                if first_car.get_type() == Type.ELECTRIC and not electric_spot_found:
+                    for spot in empty_spots:
+                        if spot.get_type() == Type.NORMAL:
+                            self.park_car(first_car, spot)
+                            self.queue.popleft()
+                            break
+
         self.schedule.step()
         
 class OnDemandModel(ParkingLotModel):
@@ -151,15 +161,25 @@ class OnDemandModel(ParkingLotModel):
         if len(self.queue) > 0:
             first_car = self.queue[0]
             if first_car.waiting_time > 2:  # Ensure the car has waited at least two step
+                electric_spot_found = False
                 for spot in empty_spots:
                     if first_car.get_type() == Type.NORMAL and spot.get_type() == Type.NORMAL:
                         self.park_car(first_car, spot)
-                        self.queue.popleft()    
-                        break     
+                        self.queue.popleft()
+                        break
                     elif first_car.get_type() == Type.ELECTRIC and spot.get_type() == Type.ELECTRIC:
                         self.park_car(first_car, spot)
                         self.queue.popleft()
+                        electric_spot_found = True
                         break
+
+                if first_car.get_type() == Type.ELECTRIC and not electric_spot_found:
+                    for spot in empty_spots:
+                        if spot.get_type() == Type.NORMAL:
+                            self.park_car(first_car, spot)
+                            self.queue.popleft()
+                            break
+
         if self.calculate_ev_demand(empty_spots):
             self.update_parking_spots()
         self.schedule.step()
