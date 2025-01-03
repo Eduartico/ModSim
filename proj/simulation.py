@@ -10,9 +10,9 @@ class Modes(Enum):
     MEMBERSHIP = "Membership"
 
 class Simulation:
-    def __init__(self, width, height, total_spots, electric_percentage=0.1, premium_percentage=0.1, electric_chance=0.1, premium_chance=0.1, mode=Modes.ON_DEMAND, gui=False):
-        self.electric_spots = None
-        self.common_spots = None
+    def __init__(self, width, height, total_spots, electric_percentage=0.1, premium_percentage=0.1, electric_chance=0.1, premium_chance=0, mode=Modes.ON_DEMAND, gui=False):
+        self.common_spots = int(total_spots * (1 - electric_percentage))
+        self.electric_spots = int(total_spots * electric_percentage)
         self.premium_spots = 0
         self.total_spots = total_spots
         self.electric_percentage = electric_percentage
@@ -33,9 +33,6 @@ class Simulation:
 
         print(f"Setting mode to {self.mode.value}")
         if self.mode == Modes.PRIORITY:
-            self.common_spots = int(self.total_spots * (1 - self.electric_percentage))
-            self.electric_spots = int(self.total_spots * self.electric_percentage)
-            self.premium_chance = 0
             self.model = model.PriorityModel(self.height, self.width, self.common_spots, self.electric_spots,
                                              self.premium_spots, self.electric_chance, self.premium_chance, 10)
 
