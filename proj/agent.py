@@ -1,3 +1,5 @@
+import random
+
 from mesa import Agent
 from enum import Enum
 
@@ -7,6 +9,17 @@ class Type(Enum):
     PREMIUM = "Premium"
 
 # Define the car agent
+def leave_probability(time_parked):
+    if time_parked < 20:
+        return 0.0
+    elif time_parked < 40:
+        return 0.5 * (time_parked - 20) / (40 - 20)
+    elif time_parked < 60:
+        return 0.5 + 0.5 * (time_parked - 40) / (60 - 40)
+    else:
+        return 1.0
+
+
 class Car(Agent):
     def __init__(self, unique_id, model, car_type, created_minute):
         super().__init__(unique_id, model)
@@ -23,11 +36,13 @@ class Car(Agent):
         
     def increment_waiting_time(self):
         self.waiting_time += 1
-            
+
     def step(self):
-        # try to leave the park
         if self.parked:
-            if self.model.current_minutes - self.parked_minute >= self.random.randint(30, 40):
+            time_parked = self.model.current_minutes - self.parked_minute
+            # 2. Call it as an instance method, passing just time_parked
+            p = leave_probability(time_parked)
+            if random.random() < p:
                 self.parked = False
                 self.leaved_minute = self.model.current_minutes
                 self.model.leave_park(self)
@@ -37,7 +52,6 @@ class Car(Agent):
     
     def get_state(self):
         return self.parked
-    
 
 # Define the spot agent
 class Spot(Agent):
