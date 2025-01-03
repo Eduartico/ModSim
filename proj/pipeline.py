@@ -6,13 +6,6 @@ from agent import Car, Spot, Type
 def collect_data(simulation_model, steps=1440):
     """
     Runs the simulation for a specified number of steps and collects data.
-
-    Parameters:
-    - simulation_model: Instance of the simulation to run.
-    - steps (int): Number of steps to run the simulation.
-
-    Returns:
-    - pd.DataFrame: DataFrame containing simulation results.
     """
     data = {
         "time": [],
@@ -63,12 +56,6 @@ def collect_data(simulation_model, steps=1440):
 def analyze_data(df):
     """
     Performs analysis on the simulation data.
-
-    Parameters:
-    - df (pd.DataFrame): DataFrame with simulation data.
-
-    Returns:
-    - dict: Summary of analyzed results.
     """
     summary = {
         "total_parked_cars": df["parked_cars"].iloc[-1],
@@ -81,61 +68,56 @@ def analyze_data(df):
     return summary
 
 
-def visualize_data(df, electric_chance, premium_chance):
+def visualize_data(df, electric_chance, premium_chance, title):
     """
-    Visualizes the simulation data with graphs.
+    Visualizes the simulation data with graphs in a single window.
+    """
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    fig.canvas.manager.set_window_title(title)
+    plt.subplots_adjust(hspace=0.5, wspace=0.3)
 
-    Parameters:
-    - df (pd.DataFrame): DataFrame with simulation data.
-    - electric_chance (float): Chance for an electric car to arrive.
-    - premium_chance (float): Chance for a premium car to arrive.
-    """
     # Parked cars and waiting cars
-    plt.figure(figsize=(10, 6))
-    plt.plot(df["time"], df["parked_cars"], label="Parked Cars")
-    plt.plot(df["time"], df["waiting_cars"], label="Waiting Cars")
-    plt.xlabel("Time")
-    plt.ylabel("Number of Cars")
-    plt.title("Cars Parked and Waiting Over Time")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    axes[0, 0].plot(df["time"], df["parked_cars"], label="Parked Cars")
+    axes[0, 0].plot(df["time"], df["waiting_cars"], label="Waiting Cars")
+    axes[0, 0].set_title("Cars Parked and Waiting Over Time")
+    axes[0, 0].set_xlabel("Time")
+    axes[0, 0].set_ylabel("Number of Cars")
+    axes[0, 0].legend()
+    axes[0, 0].grid(True)
 
     # Total cars parked
-    plt.figure(figsize=(10, 6))
-    plt.plot(df["time"], df["total_cars_parked"], label="Total Cars Parked", color="green")
-    plt.xlabel("Time")
-    plt.ylabel("Number of Cars")
-    plt.title("Total Cars Parked Over Time")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    axes[0, 1].plot(df["time"], df["total_cars_parked"], label="Total Cars Parked", color="green")
+    axes[0, 1].set_title("Total Cars Parked Over Time")
+    axes[0, 1].set_xlabel("Time")
+    axes[0, 1].set_ylabel("Number of Cars")
+    axes[0, 1].legend()
+    axes[0, 1].grid(True)
 
     # Availability of parking spots
-    plt.figure(figsize=(10, 6))
-    plt.plot(df["time"], df["available_common_spots"], label="Available Common Spots")
+    axes[1, 0].plot(df["time"], df["available_common_spots"], label="Available Common Spots")
     if electric_chance > 0:
-        plt.plot(df["time"], df["available_electric_spots"], label="Available Electric Spots")
+        axes[1, 0].plot(df["time"], df["available_electric_spots"], label="Available Electric Spots")
     if premium_chance > 0:
-        plt.plot(df["time"], df["available_premium_spots"], label="Available Premium Spots")
-    plt.xlabel("Time")
-    plt.ylabel("Available Spots")
-    plt.title("Availability of Parking Spots Over Time")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+        axes[1, 0].plot(df["time"], df["available_premium_spots"], label="Available Premium Spots")
+    axes[1, 0].set_title("Availability of Parking Spots Over Time")
+    axes[1, 0].set_xlabel("Time")
+    axes[1, 0].set_ylabel("Available Spots")
+    axes[1, 0].legend()
+    axes[1, 0].grid(True)
 
     # Total parking spots if common spots change
     if df["total_common_spots"].nunique() > 1:
-        plt.figure(figsize=(10, 6))
-        plt.plot(df["time"], df["total_common_spots"], label="Total Common Spots")
+        axes[1, 1].plot(df["time"], df["total_common_spots"], label="Total Common Spots")
         if electric_chance > 0:
-            plt.plot(df["time"], df["total_electric_spots"], label="Total Electric Spots")
+            axes[1, 1].plot(df["time"], df["total_electric_spots"], label="Total Electric Spots")
         if premium_chance > 0:
-            plt.plot(df["time"], df["total_premium_spots"], label="Total Premium Spots")
-        plt.xlabel("Time")
-        plt.ylabel("Total Spots")
-        plt.title("Total Parking Spots Over Time")
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+            axes[1, 1].plot(df["time"], df["total_premium_spots"], label="Total Premium Spots")
+        axes[1, 1].set_title("Total Parking Spots Over Time")
+        axes[1, 1].set_xlabel("Time")
+        axes[1, 1].set_ylabel("Total Spots")
+        axes[1, 1].legend()
+        axes[1, 1].grid(True)
+    else:
+        axes[1, 1].axis("off")
+
+    plt.show()
