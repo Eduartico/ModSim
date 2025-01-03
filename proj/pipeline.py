@@ -9,9 +9,9 @@ configurations = [
     (Modes.ON_DEMAND, 0.95, 0.05, 0),
     (Modes.ON_DEMAND, 0.9, 0.1, 0),
     (Modes.ON_DEMAND, 0.85, 0.15, 0),
-    (Modes.MEMBERSHIP, 0.9, 0.05, 0.05),
-    (Modes.MEMBERSHIP, 0.8, 0.1, 0.1),
-    (Modes.MEMBERSHIP, 0.7, 0.15, 0.15),
+    #(Modes.MEMBERSHIP, 0.9, 0.05, 0.05),
+    #(Modes.MEMBERSHIP, 0.8, 0.1, 0.1),
+    #(Modes.MEMBERSHIP, 0.7, 0.15, 0.15),
 ]
 
 def analyze_data(df):
