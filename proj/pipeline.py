@@ -3,18 +3,18 @@ import matplotlib.pyplot as plt
 from simulation import Simulation, Modes
 
 configurations = [
-    ("P", 0.95, 0.05, 0),
-    ("P", 0.9, 0.1, 0),
-    ("P", 0.85, 0.15, 0),
-    ("O", 0.95, 0.05, 0),
-    ("O", 0.9, 0.1, 0),
-    ("O", 0.85, 0.15, 0),
-    ("T", 0.95, 0.05, 0),
-    ("T", 0.9, 0.1, 0),
-    ("T", 0.85, 0.15, 0),
-    ("M", 0.9, 0.05, 0.05),
-    ("M", 0.8, 0.1, 0.1),
-    ("M", 0.7, 0.15, 0.15),
+    (Modes.PRIORITY, 0.95, 0.05, 0),
+    (Modes.PRIORITY, 0.9, 0.1, 0),
+    (Modes.PRIORITY, 0.85, 0.15, 0),
+#    (Modes.ON_DEMAND, 0.95, 0.05, 0),
+#    (Modes.ON_DEMAND, 0.9, 0.1, 0),
+#    (Modes.ON_DEMAND, 0.85, 0.15, 0),
+#    (Modes.TIME_BASED, 0.95, 0.05, 0),
+#    (Modes.TIME_BASED, 0.9, 0.1, 0),
+#    (Modes.TIME_BASED, 0.85, 0.15, 0),
+    (Modes.MEMBERSHIP, 0.9, 0.05, 0.05),
+    (Modes.MEMBERSHIP, 0.8, 0.1, 0.1),
+    (Modes.MEMBERSHIP, 0.7, 0.15, 0.15),
 ]
 
 
@@ -30,12 +30,15 @@ def analyze_data(df):
     return summary
 
 def visualize_data(df, electric_chance, premium_chance, title, summary):
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    fig, axes = plt.subplots(3, 2, figsize=(14, 12))  # Adding an extra row for the summary
     fig.canvas.manager.set_window_title(title)
     plt.subplots_adjust(hspace=0.5, wspace=0.3)
 
     summary_text = "\n".join([f"{key}: {value}" for key, value in summary.items()])
-    fig.suptitle(summary_text, fontsize=10, x=0.5, y=0.93)
+    axes[2, 0].axis("off")
+    axes[2, 1].axis("off")
+    axes[2, 0].text(0.5, 0.5, summary_text, fontsize=10, ha="center", va="center")
+    axes[2, 0].set_title("Summary", fontsize=12)
 
     axes[0, 0].plot(df["time"], df["parked_cars"], label="Parked Cars")
     axes[0, 0].plot(df["time"], df["waiting_cars"], label="Waiting Cars")
@@ -79,6 +82,7 @@ def visualize_data(df, electric_chance, premium_chance, title, summary):
 
     plt.show()
 
+
 def run_pipeline():
     for mode, normal_chance, electric_chance, premium_chance in configurations:
         simulation = Simulation(
@@ -89,11 +93,11 @@ def run_pipeline():
             premium_percentage=premium_chance,
             electric_chance=electric_chance,
             premium_chance=premium_chance,
+            mode=mode
         )
-        simulation.set_mode(mode)
         df = simulation.run_simulation()
         summary = analyze_data(df)
-        title = f"{mode} - Normal: {normal_chance}, Electric: {electric_chance}, Premium: {premium_chance}"
+        title = f"{mode.value} - Normal: {normal_chance}, Electric: {electric_chance}, Premium: {premium_chance}"
         print(f"\nSummary for {title}")
         for key, value in summary.items():
             print(f"{key}: {value}")

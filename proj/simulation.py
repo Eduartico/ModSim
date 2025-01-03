@@ -22,30 +22,27 @@ class Simulation:
         self.height = height
         self.electric_chance = electric_chance
         self.premium_chance = premium_chance
-        self.mode = mode
+        self.mode = None
         self.current_minutes = 0
         self.day_length = 1440 # 24 hours
         self.gui = gui
+        self.set_mode(mode)
 
     def set_mode(self, mode):
-        if mode in ["P", "Priority"]:
-            self.mode = Modes.PRIORITY
-        elif mode in ["O", "On-Demand"]:
-            self.mode = Modes.ON_DEMAND
-        elif mode in ["T", "Time-based"]:
-            self.mode = Modes.TIME_BASED
-        elif mode in ["M", "Membership"]:
-            self.mode = Modes.MEMBERSHIP
-        else:
-            raise ValueError("Invalid mode. Please choose from 'P', 'O', 'T', 'M', or their full names.")
+        self.mode = mode
 
         print(f"Setting mode to {self.mode.value}")
         if self.mode == Modes.PRIORITY:
             self.common_spots = int(self.total_spots * (1 - self.electric_percentage))
             self.electric_spots = int(self.total_spots * self.electric_percentage)
             self.premium_chance = 0
+            self.model = model.PriorityModel(self.height, self.width, self.common_spots, self.electric_spots,
+                                             self.premium_spots, self.electric_chance, self.premium_chance, 10)
 
         elif self.mode == Modes.ON_DEMAND:
+            self.model = model.OnDemandModel(self.height, self.width, self.common_spots, self.electric_spots,
+                                             self.premium_spots, self.electric_chance, self.premium_chance, 10)
+
             def adjust_ev_spaces_based_on_demand():
                 empty_spots = self.model.get_empty_spots()
                 demand = self.model.calculate_ev_demand(empty_spots)
@@ -59,6 +56,9 @@ class Simulation:
             adjust_ev_spaces_based_on_demand()
 
         elif self.mode == Modes.TIME_BASED:
+            self.model = model.TimeBasedModel(self.height, self.width, self.common_spots, self.electric_spots,
+                                              self.premium_spots, self.electric_chance, self.premium_chance, 10)
+
             def set_time_based_parking():
                 current_hour = (self.current_minutes // 60) % 24
                 if 8 <= current_hour < 18:  # rush hour
@@ -74,9 +74,8 @@ class Simulation:
             self.common_spots = int(self.total_spots * (1 - (self.electric_percentage + self.premium_percentage)))
             self.electric_spots = int(self.total_spots * self.electric_percentage)
             self.premium_spots = int(self.total_spots * self.premium_percentage)
-
-        self.model = model.ParkingLotModel(self.height, self.width, self.common_spots, self.electric_spots,
-                                           self.premium_spots, self.electric_chance, self.premium_chance, 10)
+            self.model = model.MembershipModel(self.height, self.width, self.common_spots, self.electric_spots,
+                                               self.premium_spots, self.electric_chance, self.premium_chance, 10)
 
     def run_simulation(self):
         simulation_data = {
