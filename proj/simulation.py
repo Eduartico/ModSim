@@ -40,17 +40,7 @@ class Simulation:
             self.model = model.OnDemandModel(self.height, self.width, self.common_spots, self.electric_spots,
                                              self.premium_spots, self.electric_chance, self.premium_chance, 10)
 
-            def adjust_ev_spaces_based_on_demand():
-                empty_spots = self.model.get_empty_spots()
-                demand = self.model.calculate_ev_demand(empty_spots)
-                if demand:
-                    self.electric_percentage = min(0.2, self.electric_percentage + 0.05)
-                else:
-                    self.electric_percentage = max(0.05, self.electric_percentage - 0.05)
-                self.common_spots = int(self.total_spots * (1 - self.electric_percentage))
-                self.electric_spots = int(self.total_spots * self.electric_percentage)
-
-            adjust_ev_spaces_based_on_demand()
+            self.model.update_parking_spots()
 
         elif self.mode == Modes.TIME_BASED:
             self.model = model.TimeBasedModel(self.height, self.width, self.common_spots, self.electric_spots,
