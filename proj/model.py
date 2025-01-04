@@ -21,6 +21,7 @@ class ParkingLotModel(Model):
         self.common_spots = common_spots
         self.electric_spots = electric_spots
         self.premium_spots = premium_spots
+        self.total_spots = common_spots + electric_spots + premium_spots
         self.spot_id = 0
 
         # Probabilities of each type of car
@@ -206,17 +207,69 @@ class OnDemandModel(ParkingLotModel):
         self.schedule.step()
         
 class TimeBasedModel(ParkingLotModel):
+            
+    def convert_spots(self, from_type, to_type, count):
+        converted = 0
+        for agent in self.schedule.agents:
+            if isinstance(agent, Spot) and agent.spot_type == from_type:
+                agent.spot_type = to_type
+                converted += 1
+                if converted == count:
+                    break
+    
+    def change_spots(self, common_percentage, electric_percentage):
+        
+        # Calculate desired counts based on percentages
+        desired_common = int(self.total_spots * common_percentage)
+        desired_electric = int(self.total_spots * electric_percentage)
+        
+        #print("self.common_spots = ", self.common_spots)
+        #print("self.electric_spots = ", self.electric_spots)
+        #print("desired_common = ", desired_common)
+        #print("desired_electric = ", desired_electric)
+        
+        if self.common_spots < desired_common:
+            self.convert_spots(Type.ELECTRIC, Type.NORMAL, desired_common - self.common_spots)
+        elif self.common_spots > desired_common:
+            self.convert_spots(Type.NORMAL, Type.ELECTRIC, self.common_spots - desired_common)
+        
+        self.common_spots = desired_common
+        self.electric_spots = desired_electric
+    
     def manage_parking(self, empty_spots):
-        # Handle queue and parking logic for TimeBased
-        print("Approach 3: TimeBased logic here.")
-
+        # Handle queue and parking logic for TimeBased  
+           
         current_hour = (self.current_minutes // 60) % 24
-        if 8 <= current_hour < 18:  # Peak hours
-            self.change_spots(normal_percentage=0.8, electric_percentage=0.2)
+        if 1 <= current_hour < 18:  # Peak hours
+            self.change_spots(common_percentage=0.8, electric_percentage=0.2)
         else:
-            self.change_spots(normal_percentage=0.9, electric_percentage=0.1)
-        super().manage_parking(empty_spots)
+            self.change_spots(common_percentage=0.9, electric_percentage=0.1)             
+        
+        for car in self.queue:
+            car.increment_waiting_time()
+            
+        if len(self.queue) > 0:
+            first_car = self.queue[0]
+            if first_car.waiting_time > 2:  # Ensure the car has waited at least two step
+                electric_spot_found = False
+                for spot in empty_spots:
+                    if first_car.get_type() == Type.NORMAL and spot.get_type() == Type.NORMAL:
+                        self.park_car(first_car, spot)
+                        self.queue.popleft()
+                        break
+                    elif first_car.get_type() == Type.ELECTRIC and spot.get_type() == Type.ELECTRIC:
+                        self.park_car(first_car, spot)
+                        self.queue.popleft()
+                        electric_spot_found = True
+                        break
 
+                if first_car.get_type() == Type.ELECTRIC and not electric_spot_found:
+                    for spot in empty_spots:
+                        if spot.get_type() == Type.NORMAL:
+                            self.park_car(first_car, spot)
+                            self.queue.popleft()
+                            break
+        
         self.schedule.step()
         
 class MembershipModel(ParkingLotModel):
