@@ -9,13 +9,13 @@ class Type(Enum):
     PREMIUM = "Premium"
 
 # Define the car agent
-def leave_probability(time_parked):
-    if time_parked < 20:
+def leave_probability(time_parked, min, med, max):
+    if time_parked < min:
         return 0.0
-    elif time_parked < 40:
-        return 0.5 * (time_parked - 20) / (40 - 20)
-    elif time_parked < 60:
-        return 0.5 + 0.5 * (time_parked - 40) / (60 - 40)
+    elif time_parked < med:
+        return 0.5 * (time_parked - min) / (med - min)
+    elif time_parked < max:
+        return 0.5 + 0.5 * (time_parked - med) / (max - med)
     else:
         return 1.0
 
@@ -41,7 +41,7 @@ class Car(Agent):
         if self.parked:
             time_parked = self.model.current_minutes - self.parked_minute
             # 2. Call it as an instance method, passing just time_parked
-            p = leave_probability(time_parked)
+            p = leave_probability(time_parked, 25, 50, 75)
             if random.random() < p:
                 self.parked = False
                 self.leaved_minute = self.model.current_minutes
