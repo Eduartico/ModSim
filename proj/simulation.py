@@ -98,9 +98,9 @@ class Simulation:
                 sum(spot.available and spot.spot_type == model.Type.PREMIUM for spot in spots))
             simulation_data["available_common_spots"].append(
                 sum(spot.available and spot.spot_type == model.Type.NORMAL for spot in spots))
-            simulation_data["total_electric_spots"].append(self.electric_spots)
-            simulation_data["total_premium_spots"].append(self.premium_spots)
-            simulation_data["total_common_spots"].append(self.common_spots)
+            simulation_data["total_electric_spots"].append(self.model.electric_spots)
+            simulation_data["total_premium_spots"].append(self.model.premium_spots)
+            simulation_data["total_common_spots"].append(self.model.common_spots)
 
             if self.current_minutes % 15 == 0:
                 print(f"Current time: {(self.current_minutes // 60) % 24}:{self.current_minutes % 60}")
