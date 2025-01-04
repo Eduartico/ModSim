@@ -240,7 +240,7 @@ class TimeBasedModel(ParkingLotModel):
         # Handle queue and parking logic for TimeBased  
            
         current_hour = (self.current_minutes // 60) % 24
-        if 1 <= current_hour < 18:  # Peak hours
+        if 8 <= current_hour < 18:  # Peak hours
             self.change_spots(common_percentage=0.8, electric_percentage=0.2)
         else:
             self.change_spots(common_percentage=0.9, electric_percentage=0.1)             
