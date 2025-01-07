@@ -4,7 +4,7 @@ from model import PriorityModel, OnDemandModel, TimeBasedModel, MembershipModel
 from portrayal import parking_lot_portrayal
 from pipeline import run_pipeline
 
-interactive_GUI = False
+interactive_GUI = True
 
 model_mapping = {
     "PriorityModel": PriorityModel,
@@ -15,7 +15,7 @@ model_mapping = {
 
 if __name__ == "__main__":
     if interactive_GUI:
-        model_class = model_mapping["OnDemandModel"]
+        model_class = model_mapping["MembershipModel"]
         grid = CanvasGrid(parking_lot_portrayal, 20, 20 + 1, 1000, 550)
         server = ModularServer(
             model_class,
@@ -25,10 +25,10 @@ if __name__ == "__main__":
                 "height": 20 + 1,
                 "width": 20,
                 "common_spots": 40,
-                "electric_spots": 5,
-                "premium_spots": 0,
-                "electric_chance": 0.2,
-                "premium_chance": 0,
+                "electric_spots": 2,
+                "premium_spots": 2,
+                "electric_chance": 0.1,
+                "premium_chance": 0.1,
                 "max_queue_size": 10,
             },
         )
