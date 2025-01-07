@@ -4,7 +4,7 @@ from model import PriorityModel, OnDemandModel, TimeBasedModel, MembershipModel
 from portrayal import parking_lot_portrayal
 from pipeline import run_pipeline
 
-interactive_GUI = True
+interactive_GUI = False
 
 model_mapping = {
     "PriorityModel": PriorityModel,
