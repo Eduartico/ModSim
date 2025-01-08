@@ -253,13 +253,35 @@ class TimeBasedModel(ParkingLotModel):
                 converted += 1
                 if converted == count:
                     break
+
+    def change_spots(self, common_percentage, electric_percentage):
+        total_spots = self.common_spots + self.electric_spots
+        desired_common = int(total_spots * common_percentage)
+        desired_electric = int(total_spots * electric_percentage)
+
+        if self.common_spots < desired_common:
+            self.convert_spots(Type.ELECTRIC, Type.NORMAL, desired_common - self.common_spots)
+        elif self.common_spots > desired_common:
+            self.convert_spots(Type.NORMAL, Type.ELECTRIC, self.common_spots - desired_common)
+
+        self.common_spots = desired_common
+        self.electric_spots = desired_electric
+
     def manage_parking(self, empty_spots):
+        current_hour = (self.current_minutes // 60) % 24
+
+        if self.peak_hour_start <= current_hour < self.peak_hour_end:
+            self.change_spots(common_percentage=0.9, electric_percentage=0.1)
+        else:
+            self.change_spots(common_percentage=0.8, electric_percentage=0.2)
+
+        # Handle queue and parking logic
         for car in self.queue:
             car.increment_waiting_time()
 
         if len(self.queue) > 0:
             first_car = self.queue[0]
-            if first_car.waiting_time > 2:
+            if first_car.waiting_time > 2:  # Ensure the car has waited at least two steps
                 for spot in empty_spots:
                     if spot.get_type() == first_car.get_type() or spot.get_type() == Type.NORMAL:
                         self.park_car(first_car, spot)
@@ -267,64 +289,7 @@ class TimeBasedModel(ParkingLotModel):
                         break
 
         self.schedule.step()
-    
-    def change_spots(self, common_percentage, electric_percentage):
-        
-        # Calculate desired counts based on percentages
-        desired_common = int(self.total_spots * common_percentage)
-        desired_electric = int(self.total_spots * electric_percentage)
-        
-        #print("self.common_spots = ", self.common_spots)
-        #print("self.electric_spots = ", self.electric_spots)
-        #print("desired_common = ", desired_common)
-        #print("desired_electric = ", desired_electric)
-        
-        if self.common_spots < desired_common:
-            self.convert_spots(Type.ELECTRIC, Type.NORMAL, desired_common - self.common_spots)
-        elif self.common_spots > desired_common:
-            self.convert_spots(Type.NORMAL, Type.ELECTRIC, self.common_spots - desired_common)
-        
-        self.common_spots = desired_common
-        self.electric_spots = desired_electric
-    
-    def manage_parking(self, empty_spots):
-        # Handle queue and parking logic for TimeBased  
-           
-        current_hour = (self.current_minutes // 60) % 24
-        if 8 <= current_hour < 18:  # Peak hours
-            self.change_spots(common_percentage=0.8, electric_percentage=0.2)
-        else:
-            self.change_spots(common_percentage=0.9, electric_percentage=0.1)             
-        
-        for car in self.queue:
-            car.increment_waiting_time()
-            
-        if len(self.queue) > 0:
-            first_car = self.queue[0]
-            if first_car.waiting_time > 2:  # Ensure the car has waited at least two step
-                electric_spot_found = False
-                backup_normal_spot = None
-                for spot in empty_spots:
-                    if first_car.get_type() == Type.NORMAL and spot.get_type() == Type.NORMAL:
-                        self.park_car(first_car, spot)
-                        self.queue.popleft()
-                        break
-                    elif first_car.get_type() == Type.ELECTRIC and spot.get_type() == Type.ELECTRIC:
-                        self.park_car(first_car, spot)
-                        self.queue.popleft()
-                        electric_spot_found = True
-                        break
-                    
-                    if backup_normal_spot is None:
-                        if spot.get_type() == Type.NORMAL and spot.is_available():
-                            backup_normal_spot = spot
 
-                if first_car.get_type() == Type.ELECTRIC and not electric_spot_found:
-                    if backup_normal_spot is not None:
-                        self.park_car(first_car, backup_normal_spot)
-                        self.queue.popleft()
-        
-        self.schedule.step()
         
 class MembershipModel(ParkingLotModel):
     def manage_parking(self, empty_spots):

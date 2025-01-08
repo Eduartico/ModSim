@@ -61,16 +61,6 @@ class Simulation:
                                               self.max_queue_len, self.cars_added_per_step,
                                              self.peak_hour_start, self.peak_hour_end)
 
-            def set_time_based_parking():
-                current_hour = (self.current_minutes // 60) % 24
-                if self.peak_hour_start <= current_hour < self.peak_hour_end:
-                    self.common_spots = int(self.total_spots * (1 - (self.electric_percentage * 0.5)))
-                    self.electric_spots = int(self.total_spots * (self.electric_percentage * 0.5))
-                else:
-                    self.common_spots = int(self.total_spots * (1 - (self.electric_percentage * 1.5)))
-                    self.electric_spots = int(self.total_spots * (self.electric_percentage * 1.5))
-
-            set_time_based_parking()
 
         elif self.mode == Modes.MEMBERSHIP:
             self.common_spots = int(self.total_spots * (1 - (self.electric_percentage + self.premium_percentage)))
