@@ -8,7 +8,7 @@ from agent import Car, Spot, Type
 
 class ParkingLotModel(Model):
     def __init__(self, height, width, common_spots, electric_spots=0, premium_spots=0,
-                 electric_chance=0, premium_chance=0, max_queue_size=10):
+                 electric_chance=0, premium_chance=0, max_queue_size=10, cars_added_per_step=1):
         super().__init__()  # Explicitly initialize the base Model class
         
         self.grid = MultiGrid(width, height, torus=False)
@@ -16,6 +16,7 @@ class ParkingLotModel(Model):
         self.schedule = RandomActivation(self)
         self.current_minutes = 0
         self.graveyard = []
+        self.cars_added_per_step = cars_added_per_step
         
         # Number of spots
         self.common_spots = common_spots
@@ -98,12 +99,23 @@ class ParkingLotModel(Model):
 
     def step(self):
         self.current_minutes += 1
-        self.add_car_to_queue()
+
+        for _ in range(self.cars_added_per_step):
+            self.add_car_to_queue()
+            if len(self.queue) == self.queue.maxlen:
+                break
+
         self.update_queue()
         self.get_empty_spots()
-        self.manage_parking(self.get_empty_spots())
+
+        for _ in range(self.cars_added_per_step * 2):
+            queueSize = len(self.queue)
+            self.manage_parking(self.get_empty_spots())
+            if len(self.queue) == queueSize or len(self.queue) <= 0:
+                break
+
         self.schedule.step()
-        
+
     def manage_parking(self):
         raise NotImplementedError("Subclasses must implement this method")
 

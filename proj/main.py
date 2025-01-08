@@ -30,6 +30,7 @@ if __name__ == "__main__":
                 "electric_chance": 0.1,
                 "premium_chance": 0.1,
                 "max_queue_size": 10,
+                "cars_added_per_step": 2
             },
         )
         server.port = 8521

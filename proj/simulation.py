@@ -3,14 +3,17 @@ from enum import Enum
 import model
 import pandas as pd
 
+
 class Modes(Enum):
     PRIORITY = "Priority"
     ON_DEMAND = "On-Demand"
     TIME_BASED = "Time-based"
     MEMBERSHIP = "Membership"
 
+
 class Simulation:
-    def __init__(self, width, height, total_spots, electric_percentage=0.1, premium_percentage=0.1, electric_chance=0.1, premium_chance=0, mode=Modes.ON_DEMAND, gui=False):
+    def __init__(self, width, height, total_spots, electric_percentage=0.1, premium_percentage=0.1, electric_chance=0.1,
+                 premium_chance=0, mode=Modes.ON_DEMAND, gui=False, max_queue_len=10, cars_added_per_step=1):
         self.common_spots = int(total_spots * (1 - electric_percentage))
         self.electric_spots = int(total_spots * electric_percentage)
         self.premium_spots = 0
@@ -24,8 +27,10 @@ class Simulation:
         self.premium_chance = premium_chance
         self.mode = None
         self.current_minutes = 0
-        self.day_length = 1440 # 24 hours
+        self.day_length = 1440  # 24 hours
         self.gui = gui
+        self.max_queue_len = max_queue_len
+        self.cars_added_per_step = cars_added_per_step
         self.set_mode(mode)
 
     def set_mode(self, mode):
@@ -34,17 +39,20 @@ class Simulation:
         print(f"Setting mode to {self.mode.value}")
         if self.mode == Modes.PRIORITY:
             self.model = model.PriorityModel(self.height, self.width, self.common_spots, self.electric_spots,
-                                             self.premium_spots, self.electric_chance, self.premium_chance, 10)
+                                             self.premium_spots, self.electric_chance, self.premium_chance,
+                                             self.max_queue_len, self.cars_added_per_step)
 
         elif self.mode == Modes.ON_DEMAND:
             self.model = model.OnDemandModel(self.height, self.width, self.common_spots, self.electric_spots,
-                                             self.premium_spots, self.electric_chance, self.premium_chance, 10)
+                                             self.premium_spots, self.electric_chance, self.premium_chance,
+                                             self.max_queue_len, self.cars_added_per_step)
 
             self.model.update_parking_spots()
 
         elif self.mode == Modes.TIME_BASED:
             self.model = model.TimeBasedModel(self.height, self.width, self.common_spots, self.electric_spots,
-                                              self.premium_spots, self.electric_chance, self.premium_chance, 10)
+                                              self.premium_spots, self.electric_chance, self.premium_chance,
+                                              self.max_queue_len, self.cars_added_per_step)
 
             def set_time_based_parking():
                 current_hour = (self.current_minutes // 60) % 24
@@ -62,7 +70,8 @@ class Simulation:
             self.electric_spots = int(self.total_spots * self.electric_percentage)
             self.premium_spots = int(self.total_spots * self.premium_percentage)
             self.model = model.MembershipModel(self.height, self.width, self.common_spots, self.electric_spots,
-                                               self.premium_spots, self.electric_chance, self.premium_chance, 10)
+                                               self.premium_spots, self.electric_chance, self.premium_chance,
+                                               self.max_queue_len, self.cars_added_per_step)
 
     def run_simulation(self):
         simulation_data = {
@@ -107,4 +116,3 @@ class Simulation:
 
         print("Simulation complete.")
         return pd.DataFrame(simulation_data)
-

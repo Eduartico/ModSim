@@ -125,14 +125,16 @@ def run_pipeline():
 
     for mode, normal_chance, electric_chance, premium_chance in configurations:
         simulation = Simulation(
-            width=20,
-            height=20,
-            total_spots=40,
+            width=12,
+            height=12,
+            total_spots=100,
             electric_percentage=electric_chance,
             premium_percentage=premium_chance,
             electric_chance=electric_chance,
             premium_chance=premium_chance,
-            mode=mode
+            mode=mode,
+            max_queue_len=20,
+            cars_added_per_step=4
         )
         df = simulation.run_simulation()
         summary = analyze_data(df)
@@ -141,7 +143,8 @@ def run_pipeline():
         for key, value in summary.items():
             print(f"{key}: {value}")
         model_results[mode].append((summary, df, electric_chance, premium_chance, title))
-
+        if mode == Modes.MEMBERSHIP:
+            continue
         combined_key = (normal_chance, electric_chance, premium_chance)
         combined_data[combined_key].append((summary, df, title))
 
