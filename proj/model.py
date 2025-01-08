@@ -99,11 +99,11 @@ class ParkingLotModel(Model):
 
     def step(self):
         self.current_minutes += 1
-
-        for _ in range(self.cars_added_per_step):
-            self.add_car_to_queue()
-            if len(self.queue) == self.queue.maxlen:
-                break
+        if len(self.queue) < self.queue.maxlen:
+            for _ in range(self.cars_added_per_step):
+                self.add_car_to_queue()
+                if len(self.queue) >= self.queue.maxlen:
+                    break
 
         self.update_queue()
         self.get_empty_spots()
