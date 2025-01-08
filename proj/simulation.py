@@ -13,7 +13,8 @@ class Modes(Enum):
 
 class Simulation:
     def __init__(self, width, height, total_spots, electric_percentage=0.1, premium_percentage=0.1, electric_chance=0.1,
-                 premium_chance=0, mode=Modes.ON_DEMAND, gui=False, max_queue_len=10, cars_added_per_step=1):
+                 premium_chance=0, mode=Modes.ON_DEMAND, gui=False, max_queue_len=10, cars_added_per_step=1,
+                 peak_hour_start=8, peak_hour_end=18):
         self.common_spots = int(total_spots * (1 - electric_percentage))
         self.electric_spots = int(total_spots * electric_percentage)
         self.premium_spots = 0
@@ -31,7 +32,10 @@ class Simulation:
         self.gui = gui
         self.max_queue_len = max_queue_len
         self.cars_added_per_step = cars_added_per_step
+        self.peak_hour_start = peak_hour_start
+        self.peak_hour_end = peak_hour_end
         self.set_mode(mode)
+
 
     def set_mode(self, mode):
         self.mode = mode
@@ -40,23 +44,26 @@ class Simulation:
         if self.mode == Modes.PRIORITY:
             self.model = model.PriorityModel(self.height, self.width, self.common_spots, self.electric_spots,
                                              self.premium_spots, self.electric_chance, self.premium_chance,
-                                             self.max_queue_len, self.cars_added_per_step)
+                                             self.max_queue_len, self.cars_added_per_step,
+                                             self.peak_hour_start, self.peak_hour_end)
 
         elif self.mode == Modes.ON_DEMAND:
             self.model = model.OnDemandModel(self.height, self.width, self.common_spots, self.electric_spots,
                                              self.premium_spots, self.electric_chance, self.premium_chance,
-                                             self.max_queue_len, self.cars_added_per_step)
+                                             self.max_queue_len, self.cars_added_per_step,
+                                             self.peak_hour_start, self.peak_hour_end)
 
             self.model.update_parking_spots()
 
         elif self.mode == Modes.TIME_BASED:
             self.model = model.TimeBasedModel(self.height, self.width, self.common_spots, self.electric_spots,
                                               self.premium_spots, self.electric_chance, self.premium_chance,
-                                              self.max_queue_len, self.cars_added_per_step)
+                                              self.max_queue_len, self.cars_added_per_step,
+                                             self.peak_hour_start, self.peak_hour_end)
 
             def set_time_based_parking():
                 current_hour = (self.current_minutes // 60) % 24
-                if 8 <= current_hour < 18:  # rush hour
+                if self.peak_hour_start <= current_hour < self.peak_hour_end:
                     self.common_spots = int(self.total_spots * (1 - (self.electric_percentage * 0.5)))
                     self.electric_spots = int(self.total_spots * (self.electric_percentage * 0.5))
                 else:
@@ -71,7 +78,8 @@ class Simulation:
             self.premium_spots = int(self.total_spots * self.premium_percentage)
             self.model = model.MembershipModel(self.height, self.width, self.common_spots, self.electric_spots,
                                                self.premium_spots, self.electric_chance, self.premium_chance,
-                                               self.max_queue_len, self.cars_added_per_step)
+                                               self.max_queue_len, self.cars_added_per_step,
+                                             self.peak_hour_start, self.peak_hour_end)
 
     def run_simulation(self):
         simulation_data = {
@@ -85,6 +93,7 @@ class Simulation:
             "total_electric_spots": [],
             "total_premium_spots": [],
             "total_common_spots": [],
+            "earnings": [],
         }
 
         while self.current_minutes < self.day_length:
@@ -110,6 +119,7 @@ class Simulation:
             simulation_data["total_electric_spots"].append(self.model.electric_spots)
             simulation_data["total_premium_spots"].append(self.model.premium_spots)
             simulation_data["total_common_spots"].append(self.model.common_spots)
+            simulation_data["earnings"].append(self.model.earnings)
 
             if self.current_minutes % 15 == 0:
                 print(f"Current time: {(self.current_minutes // 60) % 24}:{self.current_minutes % 60}")

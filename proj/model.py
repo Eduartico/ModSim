@@ -8,30 +8,33 @@ from agent import Car, Spot, Type
 
 class ParkingLotModel(Model):
     def __init__(self, height, width, common_spots, electric_spots=0, premium_spots=0,
-                 electric_chance=0, premium_chance=0, max_queue_size=10, cars_added_per_step=1):
-        super().__init__()  # Explicitly initialize the base Model class
-        
+                 electric_chance=0, premium_chance=0, max_queue_size=10, cars_added_per_step=1,
+                 peak_hour_start=8, peak_hour_end=18):
+        super().__init__()
+
         self.grid = MultiGrid(width, height, torus=False)
         self.queue = deque(maxlen=max_queue_size)
         self.schedule = RandomActivation(self)
         self.current_minutes = 0
         self.graveyard = []
         self.cars_added_per_step = cars_added_per_step
-        
-        # Number of spots
+        self.earnings = 0
+
+        self.peak_hour_start = peak_hour_start
+        self.peak_hour_end = peak_hour_end
+
         self.common_spots = common_spots
         self.electric_spots = electric_spots
         self.premium_spots = premium_spots
         self.total_spots = common_spots + electric_spots + premium_spots
         self.spot_id = 0
 
-        # Probabilities of each type of car
         self.electric_chance = electric_chance
         self.premium_chance = premium_chance
         self.normal_chance = 1 - electric_chance - premium_chance
         self.probabilities = [self.normal_chance, self.electric_chance, self.premium_chance]
         self.car_id = 0
-        
+
         self.create_spots()
         
     def create_spots(self):
@@ -53,14 +56,27 @@ class ParkingLotModel(Model):
                 if x == self.grid.width:
                     x = 0
                     y += 1
-                    
+
     def add_car_to_queue(self):
-        if(len(self.queue) < self.queue.maxlen):    
-            car_type = random.choices([Type.NORMAL, Type.ELECTRIC, Type.PREMIUM], self.probabilities)[0]
-            new_car = Car(self.car_id, self, car_type, self.current_minutes)
-            self.car_id += 1
-            self.queue.append(new_car)
-            
+        current_hour = (self.current_minutes // 60) % 24
+
+        if self.peak_hour_start <= current_hour < self.peak_hour_end:
+            peak_mid = (self.peak_hour_start + self.peak_hour_end) / 2
+            if current_hour <= peak_mid:
+                multiplier = 1 + (current_hour - self.peak_hour_start) / (peak_mid - self.peak_hour_start) * 0.5
+            else:
+                multiplier = 1 + (self.peak_hour_end - current_hour) / (self.peak_hour_end - peak_mid) * 0.5
+        else:
+            multiplier = 1
+
+        adjusted_cars = int(self.cars_added_per_step * multiplier)
+        for _ in range(adjusted_cars):
+            if len(self.queue) < self.queue.maxlen:
+                car_type = random.choices([Type.NORMAL, Type.ELECTRIC, Type.PREMIUM], self.probabilities)[0]
+                new_car = Car(self.car_id, self, car_type, self.current_minutes)
+                self.car_id += 1
+                self.queue.append(new_car)
+
     def get_empty_spots(self):
         empty_spots = []
         for agent in self.schedule.agents:
@@ -87,12 +103,20 @@ class ParkingLotModel(Model):
         spot.park_car(car)
         car.park_car(self.current_minutes)
         self.schedule.add(car)
-        
+
     def leave_park(self, car):
         for agent in self.schedule.agents:
             if isinstance(agent, Spot) and agent.current_car == car:
-                agent.unpark_car()  # Free the spot
-                break 
+                agent.unpark_car()
+                break
+
+        if car.get_type() == Type.NORMAL:
+            self.earnings += 10
+        elif car.get_type() == Type.ELECTRIC:
+            self.earnings += 15
+        elif car.get_type() == Type.PREMIUM:
+            self.earnings += 20
+
         self.grid.remove_agent(car)
         self.graveyard.append(car)
         self.schedule.remove(car)
@@ -100,10 +124,7 @@ class ParkingLotModel(Model):
     def step(self):
         self.current_minutes += 1
         if len(self.queue) < self.queue.maxlen:
-            for _ in range(self.cars_added_per_step):
-                self.add_car_to_queue()
-                if len(self.queue) >= self.queue.maxlen:
-                    break
+            self.add_car_to_queue()
 
         self.update_queue()
         self.get_empty_spots()
@@ -224,7 +245,6 @@ class OnDemandModel(ParkingLotModel):
         self.schedule.step()
         
 class TimeBasedModel(ParkingLotModel):
-            
     def convert_spots(self, from_type, to_type, count):
         converted = 0
         for agent in self.schedule.agents:
@@ -233,6 +253,20 @@ class TimeBasedModel(ParkingLotModel):
                 converted += 1
                 if converted == count:
                     break
+    def manage_parking(self, empty_spots):
+        for car in self.queue:
+            car.increment_waiting_time()
+
+        if len(self.queue) > 0:
+            first_car = self.queue[0]
+            if first_car.waiting_time > 2:
+                for spot in empty_spots:
+                    if spot.get_type() == first_car.get_type() or spot.get_type() == Type.NORMAL:
+                        self.park_car(first_car, spot)
+                        self.queue.popleft()
+                        break
+
+        self.schedule.step()
     
     def change_spots(self, common_percentage, electric_percentage):
         

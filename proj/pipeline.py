@@ -25,6 +25,8 @@ def analyze_data(df):
         "average_available_common_spots": df["available_common_spots"].mean(),
         "average_available_electric_spots": df["available_electric_spots"].mean(),
         "average_available_premium_spots": df["available_premium_spots"].mean(),
+        "total_earnings": df["earnings"].iloc[-1],
+
     }
     return summary
 
@@ -73,6 +75,7 @@ def visualize_model_results(results, model_title, include_total_spots):
             axes[idx][3].set_ylabel("Total Spots")
             axes[idx][3].legend()
             axes[idx][3].grid(True)
+            axes[idx][3].plot(hours, df["earnings"], label="Earnings")
 
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.show()
@@ -134,7 +137,9 @@ def run_pipeline():
             premium_chance=premium_chance,
             mode=mode,
             max_queue_len=20,
-            cars_added_per_step=4
+            cars_added_per_step=4,
+            peak_hour_start=8,
+            peak_hour_end=18
         )
         df = simulation.run_simulation()
         summary = analyze_data(df)
