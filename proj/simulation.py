@@ -84,6 +84,9 @@ class Simulation:
             "total_premium_spots": [],
             "total_common_spots": [],
             "earnings": [],
+            "total_common_cars_parked": [],
+            "total_electric_cars_parked": [],
+            "total_premium_cars_parked": [],
         }
 
         while self.current_minutes < self.day_length:
@@ -110,9 +113,19 @@ class Simulation:
             simulation_data["total_premium_spots"].append(self.model.premium_spots)
             simulation_data["total_common_spots"].append(self.model.common_spots)
             simulation_data["earnings"].append(self.model.earnings)
+            simulation_data["total_common_cars_parked"].append(
+                sum(car.parked and car.car_type == model.Type.NORMAL for car in self.model.schedule.agents if
+                    isinstance(car, model.Car)))
+            simulation_data["total_electric_cars_parked"].append(
+                sum(car.parked and car.car_type == model.Type.ELECTRIC for car in self.model.schedule.agents if
+                    isinstance(car, model.Car)))
+            simulation_data["total_premium_cars_parked"].append(
+                sum(car.parked and car.car_type == model.Type.PREMIUM for car in self.model.schedule.agents if
+                    isinstance(car, model.Car)))
 
             if self.current_minutes % 15 == 0:
                 print(f"Current time: {(self.current_minutes // 60) % 24}:{self.current_minutes % 60}")
 
         print("Simulation complete.")
         return pd.DataFrame(simulation_data)
+
