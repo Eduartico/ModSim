@@ -105,59 +105,54 @@ def visualize_model_results(results, model_title, include_total_spots):
             axes[idx][3].legend(fontsize=8)
             axes[idx][3].grid(True)
 
-    plt.subplots_adjust(wspace=0.4, hspace=20)  # Add more space between the plots
-    plt.tight_layout(rect=(0, 0, 1, 0.96))  # Adjust layout to fit smaller fonts and prevent overlap
+    plt.subplots_adjust(wspace=0.4, hspace=0.6)
+    plt.tight_layout(rect=(0, 0, 1, 0.96))
     plt.show()
 
 
 def visualize_combined_results(combined_data):
     n_configs = len(combined_data)
-    fig, axes = plt.subplots(n_configs, 4, figsize=(24, 6 * n_configs))
-    fig.suptitle("Combined Results for Shared Configurations", fontsize=14)
+    fig, axes = plt.subplots(2 * n_configs, 2, figsize=(14, 6 * n_configs))
 
     if n_configs == 1:
         axes = [axes]
 
     for idx, (config_title, model_results) in enumerate(combined_data.items()):
-        axes[idx][0].axis("off")
-        axes[idx][0].text(0.5, 0.5, config_title, fontsize=10, ha="center", va="center")
-        axes[idx][0].set_title("Configuration Details", fontsize=12)
+        axes[idx * 2][0].axis("off")
+        axes[idx * 2][0].text(0.5, 0.5, config_title, fontsize=10, ha="center", va="center")
 
         for df, model_title in [(result[1], result[2].split()[0]) for result in model_results]:
             df = df[df["time"] >= 60]
             hours = df["time"] / 60
             rolling_common = df["total_common_cars_parked"].rolling(window=30).median()
             rolling_electric = df["total_electric_cars_parked"].rolling(window=20).median()
-            axes[idx][1].plot(hours, rolling_common, label=f"{model_title}")
-            if idx == 0:
-                axes[idx][1].set_title("Common Cars Parked Over Time (Rolling Median)")
-            axes[idx][1].set_xlabel("Hour of the Day")
-            axes[idx][1].set_ylabel("Common Cars Parked")
-            axes[idx][1].legend()
-            axes[idx][1].grid(True)
 
-            axes[idx][2].plot(hours, rolling_electric, label=f"{model_title}")
+            axes[idx * 2 + 1][0].plot(hours, rolling_common, label=f"{model_title}")
+            axes[idx * 2 + 1][0].set_title("Common Cars Parked Over Time (Rolling Median)", fontsize=10)
+            axes[idx * 2 + 1][0].set_xlabel("Hour of the Day", fontsize=8)
+            axes[idx * 2 + 1][0].set_ylabel("Common Cars Parked", fontsize=8)
+            axes[idx * 2 + 1][0].legend(fontsize=8, loc='upper left', bbox_to_anchor=(1, 1))
+            axes[idx * 2 + 1][0].grid(True)
+
+            axes[idx * 2 + 1][1].plot(hours, rolling_electric, label=f"{model_title}")
             if model_title == "Membership":
                 rolling_premium = df["total_premium_cars_parked"].rolling(window=20).median()
-                axes[idx][2].plot(hours, rolling_premium, label=f"Membership - Premium")
-            if idx == 0:
-                axes[idx][2].set_title("Electric Cars Parked Over Time (RM)")
-            axes[idx][2].set_xlabel("Hour of the Day")
-            axes[idx][2].set_ylabel("Cars Parked")
-            axes[idx][2].legend()
-            axes[idx][2].grid(True)
+                axes[idx * 2 + 1][1].plot(hours, rolling_premium, label=f"Membership - Premium")
+            axes[idx * 2 + 1][1].set_title("Electric Cars Parked Over Time (Rolling Median)", fontsize=10)
+            axes[idx * 2 + 1][1].set_xlabel("Hour of the Day", fontsize=8)
+            axes[idx * 2 + 1][1].set_ylabel("Cars Parked", fontsize=8)
+            axes[idx * 2 + 1][1].legend(fontsize=8, loc='upper left', bbox_to_anchor=(1, 1))
+            axes[idx * 2 + 1][1].grid(True)
 
-            axes[idx][3].plot(hours, df["earnings"], label=f"{model_title}")
-            if idx == 0:
-                axes[idx][3].set_title("Earnings Over Time")
-            axes[idx][3].set_xlabel("Hour of the Day")
-            axes[idx][3].set_ylabel("Earnings (€)")
-            axes[idx][3].legend()
-            axes[idx][3].grid(True)
-
-    plt.tight_layout(rect=(0, 0, 1, 0.95))
+            axes[idx * 2][1].plot(hours, df["earnings"], label=f"{model_title}")
+            axes[idx * 2][1].set_title("Earnings Over Time", fontsize=10)
+            axes[idx * 2][1].set_xlabel("Hour of the Day", fontsize=8)
+            axes[idx * 2][1].set_ylabel("Earnings (€)", fontsize=8)
+            axes[idx * 2][1].legend(fontsize=8, loc='upper left', bbox_to_anchor=(1, 1))
+            axes[idx * 2][1].grid(True)
+    plt.tight_layout(rect=(0, 0, 0.85, 0.95))
+    plt.subplots_adjust(wspace=0.5, hspace=0.98, right=0.85)
     plt.show()
-
 
 
 def run_pipeline():
