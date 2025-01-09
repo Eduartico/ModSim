@@ -144,11 +144,14 @@ def visualize_combined_results(combined_data):
             axes[idx * 2 + 1][1].legend(fontsize=8, loc='upper left', bbox_to_anchor=(1, 1))
             axes[idx * 2 + 1][1].grid(True)
 
-            axes[idx * 2][1].plot(hours, df["earnings"], label=f"{model_title}")
-            axes[idx * 2][1].set_title("Earnings Over Time", fontsize=10)
-            axes[idx * 2][1].set_xlabel("Hour of the Day", fontsize=8)
-            axes[idx * 2][1].set_ylabel("Earnings (€)", fontsize=8)
-            axes[idx * 2][1].legend(fontsize=8, loc='upper left', bbox_to_anchor=(1, 1))
+            total_earnings = df["earnings"].iloc[-1]/1000
+            axes[idx * 2][1].bar(model_title, total_earnings)
+            axes[idx * 2][1].set_title("Total Earnings per Mode", fontsize=10)
+            axes[idx * 2][1].set_xlabel("Modes", fontsize=8)
+            axes[idx * 2][1].set_ylabel("Total Earnings (K€)", fontsize=8)
+            axes[idx * 2][1].tick_params(axis='x', labelsize=8)
+            if model_title == "Time-based":
+                axes[idx * 2][1].set_ylim(bottom=total_earnings - 10)
             axes[idx * 2][1].grid(True)
     plt.tight_layout(rect=(0, 0, 0.85, 0.95))
     plt.subplots_adjust(wspace=0.5, hspace=0.98, right=0.85)
@@ -183,8 +186,8 @@ def run_pipeline():
         model_results[mode].append((summary, df, electric_chance, premium_chance, title))
         combined_data[config_title].append((summary, df, title))
 
-    for mode, results in model_results.items():
-        visualize_model_results(results, f"{mode.value} Model", include_total_spots=mode == Modes.ON_DEMAND)
+    #for mode, results in model_results.items():
+     #   visualize_model_results(results, f"{mode.value} Model", include_total_spots=mode == Modes.ON_DEMAND)
 
     visualize_combined_results(combined_data)
 
