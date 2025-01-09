@@ -18,7 +18,7 @@ configurations = [
     ("Config 3", Modes.MEMBERSHIP, 0.7, 0.15, 0.15),
 ]
 
-def analyze_data(df):
+def analyze_data(df, wait_time_df, show_premium=False):
     total_parked_cars = df["total_cars_parked"].iloc[-1]
     max_waiting_cars = df["waiting_cars"].max()
     max_wait_time = df["time"][df["waiting_cars"].idxmax()] if max_waiting_cars > 0 else 0
@@ -35,9 +35,14 @@ def analyze_data(df):
         "max_wait_time": round(max_wait_time, 2),
         "average_available_common_spots": round(available_common_spots, 2),
         "average_available_electric_spots": round(available_electric_spots, 2),
-        "average_available_premium_spots": round(available_premium_spots, 2),
         "total_earnings": round(total_earnings, 2),
+        "average_wait_time": round(wait_time_df["total"], 2),
+        "average_wait_time_common_cars": round(wait_time_df["Normal"], 2),
+        "average_wait_time_electric_cars": round(wait_time_df["Electric"], 2)
     }
+    if show_premium:
+        summary["average_available_premium_spots"] = round(available_premium_spots, 2)
+        summary["average_wait_time_premium_cars"] = round(wait_time_df["Premium"], 2)
     return summary
 
 
@@ -177,8 +182,8 @@ def run_pipeline():
             peak_hour_start=8,
             peak_hour_end=18
         )
-        df = simulation.run_simulation()
-        summary = analyze_data(df)
+        df, wait_time_df = simulation.run_simulation()
+        summary = analyze_data(df, wait_time_df, premium_chance != 0)
         title = f"{mode.value} - Normal: {normal_chance}, Electric: {electric_chance}, Premium: {premium_chance}"
         print(f"\nSummary for {title}")
         for key, value in summary.items():
@@ -186,8 +191,8 @@ def run_pipeline():
         model_results[mode].append((summary, df, electric_chance, premium_chance, title))
         combined_data[config_title].append((summary, df, title))
 
-    #for mode, results in model_results.items():
-     #   visualize_model_results(results, f"{mode.value} Model", include_total_spots=mode == Modes.ON_DEMAND)
+    for mode, results in model_results.items():
+        visualize_model_results(results, f"{mode.value} Model", include_total_spots=mode == Modes.ON_DEMAND)
 
     visualize_combined_results(combined_data)
 

@@ -126,6 +126,42 @@ class Simulation:
             if self.current_minutes % 15 == 0:
                 print(f"Current time: {(self.current_minutes // 60) % 24}:{self.current_minutes % 60}")
 
+        total_waiting_time = 0
+        total_cars = 0
+        total_waiting_time_by_type = {
+            model.Type.NORMAL: 0,
+            model.Type.ELECTRIC: 0,
+            model.Type.PREMIUM: 0
+        }
+        total_cars_by_type = {
+            model.Type.NORMAL: 0,
+            model.Type.ELECTRIC: 0,
+            model.Type.PREMIUM: 0
+        }
+
+        for car in self.model.graveyard:
+            if isinstance(car, model.Car):
+                total_waiting_time += car.waiting_time
+                total_cars += 1
+                total_waiting_time_by_type[car.car_type] += car.waiting_time
+                total_cars_by_type[car.car_type] += 1
+        total_average_waiting_time = 0
+        if total_cars > 0:
+            total_average_waiting_time = total_waiting_time / total_cars
+
+        average_waiting_time_by_type = {
+            car_type: (total_waiting_time_by_type[car_type] / total_cars_by_type[car_type] if total_cars_by_type[
+                                                                                                  car_type] > 0 else 0)
+            for car_type in total_waiting_time_by_type
+        }
+
+        average_waiting_time_df = {
+            "total": total_average_waiting_time,
+            model.Type.NORMAL.value: average_waiting_time_by_type[model.Type.NORMAL],
+            model.Type.ELECTRIC.value: average_waiting_time_by_type[model.Type.ELECTRIC],
+            model.Type.PREMIUM.value: average_waiting_time_by_type[model.Type.PREMIUM]
+        }
+
         print("Simulation complete.")
-        return pd.DataFrame(simulation_data)
+        return pd.DataFrame(simulation_data), average_waiting_time_df
 
