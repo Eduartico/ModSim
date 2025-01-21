@@ -76,42 +76,33 @@ class Simulation:
             "time": [],
             "parked_cars": [],
             "waiting_cars": [],
-            "total_cars_parked": [],
+            "available_common_spots": [],
             "available_electric_spots": [],
             "available_premium_spots": [],
-            "available_common_spots": [],
-            "total_electric_spots": [],
-            "total_premium_spots": [],
-            "total_common_spots": [],
             "earnings": [],
             "total_common_cars_parked": [],
             "total_electric_cars_parked": [],
-            "total_premium_cars_parked": [],
+            "total_premium_cars_parked": []
         }
 
         while self.current_minutes < self.day_length:
             self.current_minutes += 1
             self.model.step()
 
-            if self.gui:
-                time.sleep(0.1)
-
-            spots = [agent for agent in self.model.schedule.agents if isinstance(agent, model.Spot)]
             parked_cars = sum(agent.parked for agent in self.model.schedule.agents if isinstance(agent, model.Car))
 
             simulation_data["time"].append(self.current_minutes)
             simulation_data["parked_cars"].append(parked_cars)
             simulation_data["waiting_cars"].append(len(self.model.queue))
-            simulation_data["total_cars_parked"].append(parked_cars + len(self.model.graveyard))
-            simulation_data["available_electric_spots"].append(
-                sum(spot.available and spot.spot_type == model.Type.ELECTRIC for spot in spots))
-            simulation_data["available_premium_spots"].append(
-                sum(spot.available and spot.spot_type == model.Type.PREMIUM for spot in spots))
             simulation_data["available_common_spots"].append(
-                sum(spot.available and spot.spot_type == model.Type.NORMAL for spot in spots))
-            simulation_data["total_electric_spots"].append(self.model.electric_spots)
-            simulation_data["total_premium_spots"].append(self.model.premium_spots)
-            simulation_data["total_common_spots"].append(self.model.common_spots)
+                sum(spot.available and spot.spot_type == model.Type.NORMAL for spot in self.model.schedule.agents if
+                    isinstance(spot, model.Spot)))
+            simulation_data["available_electric_spots"].append(
+                sum(spot.available and spot.spot_type == model.Type.ELECTRIC for spot in self.model.schedule.agents if
+                    isinstance(spot, model.Spot)))
+            simulation_data["available_premium_spots"].append(
+                sum(spot.available and spot.spot_type == model.Type.PREMIUM for spot in self.model.schedule.agents if
+                    isinstance(spot, model.Spot)))
             simulation_data["earnings"].append(self.model.earnings)
             simulation_data["total_common_cars_parked"].append(
                 sum(car.parked and car.car_type == model.Type.NORMAL for car in self.model.schedule.agents if
@@ -123,45 +114,19 @@ class Simulation:
                 sum(car.parked and car.car_type == model.Type.PREMIUM for car in self.model.schedule.agents if
                     isinstance(car, model.Car)))
 
-            if self.current_minutes % 15 == 0:
-                print(f"Current time: {(self.current_minutes // 60) % 24}:{self.current_minutes % 60}")
+        min_length = min(len(values) for values in simulation_data.values())
+        for key in simulation_data:
+            simulation_data[key] = simulation_data[key][:min_length]
 
-        total_waiting_time = 0
-        total_cars = 0
-        total_waiting_time_by_type = {
-            model.Type.NORMAL: 0,
-            model.Type.ELECTRIC: 0,
-            model.Type.PREMIUM: 0
-        }
-        total_cars_by_type = {
-            model.Type.NORMAL: 0,
-            model.Type.ELECTRIC: 0,
-            model.Type.PREMIUM: 0
-        }
-
-        for car in self.model.graveyard:
-            if isinstance(car, model.Car):
-                total_waiting_time += car.waiting_time
-                total_cars += 1
-                total_waiting_time_by_type[car.car_type] += car.waiting_time
-                total_cars_by_type[car.car_type] += 1
-        total_average_waiting_time = 0
-        if total_cars > 0:
-            total_average_waiting_time = total_waiting_time / total_cars
-
-        average_waiting_time_by_type = {
-            car_type: (total_waiting_time_by_type[car_type] / total_cars_by_type[car_type] if total_cars_by_type[
-                                                                                                  car_type] > 0 else 0)
-            for car_type in total_waiting_time_by_type
-        }
-
-        average_waiting_time_df = {
-            "total": total_average_waiting_time,
-            model.Type.NORMAL.value: average_waiting_time_by_type[model.Type.NORMAL],
-            model.Type.ELECTRIC.value: average_waiting_time_by_type[model.Type.ELECTRIC],
-            model.Type.PREMIUM.value: average_waiting_time_by_type[model.Type.PREMIUM]
-        }
+        total_waiting_time = sum(car.waiting_time for car in self.model.graveyard if isinstance(car, model.Car))
+        total_cars = len([car for car in self.model.graveyard if isinstance(car, model.Car)])
+        average_waiting_time = total_waiting_time / total_cars if total_cars > 0 else 0
 
         print("Simulation complete.")
-        return pd.DataFrame(simulation_data), average_waiting_time_df
+
+        return pd.DataFrame(simulation_data), average_waiting_time
+
+
+
+
 
