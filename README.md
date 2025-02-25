@@ -3,7 +3,7 @@
 * Tools: Python, MESA
 * Institution: FEUP
 * Course: MS (Modelação & Simulação)
-* Project grade: ?/20.0
+* Project grade: 17.0/20.0
 * Group members: 
   * Adam Nogueira (up202007519@edu.fe.up.pt)
   * Eduardo Duarte (up202004999@edu.fe.up.pt / duarte.eduardoeds@gmail.com)
